@@ -52,25 +52,25 @@ const ShoppingCart = ({ cartItems, setCartItems, goToNextStep }) => {
   const total = subtotal + shipping;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 animate-on-scroll">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-12 animate-on-scroll">
       <div className="lg:col-span-2">
-        <h2 className="text-2xl font-bold mb-6">Your Cart</h2>
-        <div className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
+        <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Your Cart</h2>
+        <div className="space-y-4 sm:space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
           {cartItems.map(item => (
-            <div key={item.id} className="flex items-start space-x-6 bg-white p-4 rounded-lg shadow-sm">
-              <img src={item.imageUrl} alt={item.title} className="w-24 h-36 object-cover rounded-md" />
+            <div key={item.id} className="flex items-start space-x-4 sm:space-x-6 bg-white p-3 sm:p-4 rounded-lg shadow-sm">
+              <img src={item.imageUrl} alt={item.title} className="w-20 sm:w-24 h-28 sm:h-36 object-cover rounded-md" />
               <div className="flex-1">
-                <h3 className="font-bold text-lg">{item.title}</h3>
-                <p className="text-sm text-gray-600">by {item.author}</p>
-                <p className="text-lg font-semibold text-red-600 mt-2">£{item.price.toFixed(2)}</p>
+                <h3 className="font-bold text-base sm:text-lg">{item.title}</h3>
+                <p className="text-xs sm:text-sm text-gray-600">by {item.author}</p>
+                <p className="text-base sm:text-lg font-semibold text-red-600 mt-2">£{item.price.toFixed(2)}</p>
               </div>
-              <div className="flex flex-col items-end justify-between h-36">
+              <div className="flex flex-col items-end justify-between h-28 sm:h-36">
                 <div className="flex items-center border rounded-md">
-                  <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="px-3 py-1 text-lg font-bold">-</button>
-                  <span className="px-4 py-1 border-l border-r">{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-3 py-1 text-lg font-bold">+</button>
+                  <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="px-2 sm:px-3 py-1 text-base sm:text-lg font-bold">-</button>
+                  <span className="px-3 sm:px-4 py-1 border-l border-r text-sm sm:text-base">{item.quantity}</span>
+                  <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-2 sm:px-3 py-1 text-base sm:text-lg font-bold">+</button>
                 </div>
-                <button onClick={() => removeItem(item.id)} className="flex items-center text-sm text-gray-500 hover:text-red-600">
+                <button onClick={() => removeItem(item.id)} className="flex items-center text-xs sm:text-sm text-gray-500 hover:text-red-600">
                   <TrashIcon className="w-4 h-4 mr-1" /> Remove
                 </button>
               </div>
@@ -79,14 +79,14 @@ const ShoppingCart = ({ cartItems, setCartItems, goToNextStep }) => {
         </div>
       </div>
       <div className="lg:col-span-1">
-        <div className="bg-white p-6 rounded-lg shadow-sm sticky top-28">
-          <h2 className="text-2xl font-bold mb-6">Order Summary</h2>
-          <div className="space-y-4 text-gray-700">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm sticky top-20 sm:top-28">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Order Summary</h2>
+          <div className="space-y-3 sm:space-y-4 text-gray-700 text-sm sm:text-base">
             <div className="flex justify-between"><p>Subtotal</p><p>£{subtotal.toFixed(2)}</p></div>
             <div className="flex justify-between"><p>Shipping</p><p>£{shipping.toFixed(2)}</p></div>
-            <div className="border-t pt-4 flex justify-between font-bold text-lg"><p>Total</p><p>£{total.toFixed(2)}</p></div>
+            <div className="border-t pt-3 sm:pt-4 flex justify-between font-bold text-base sm:text-lg"><p>Total</p><p>£{total.toFixed(2)}</p></div>
           </div>
-          <button onClick={goToNextStep} className="w-full mt-8 bg-red-600 text-white py-3 rounded-md font-semibold text-lg hover:bg-red-700 transition-colors">
+          <button onClick={goToNextStep} className="w-full mt-6 sm:mt-8 bg-red-600 text-white py-2 sm:py-3 rounded-md font-semibold text-base sm:text-lg hover:bg-red-700 transition-colors">
             Proceed to Checkout
           </button>
         </div>
@@ -101,53 +101,53 @@ const PaymentForm = ({ goToNextStep }) => {
 
   return (
     <div className="max-w-2xl mx-auto animate-on-scroll">
-      <h2 className="text-3xl font-bold text-center mb-8">Payment Information</h2>
-      <div className="bg-white p-8 rounded-lg shadow-lg">
-        <div className="mb-6">
+      <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8">Payment Information</h2>
+      <div className="bg-white p-4 sm:p-8 rounded-lg shadow-lg">
+        <div className="mb-4 sm:mb-6">
           <div className="flex border-b">
-            <button onClick={() => setActiveTab('credit-card')} className={`py-2 px-4 font-semibold ${activeTab === 'credit-card' ? 'border-b-2 border-red-600 text-red-600' : 'text-gray-500'}`}>
-              <CreditCardIcon className="inline-block mr-2 h-5 w-5" />Credit/Debit Card
+            <button onClick={() => setActiveTab('credit-card')} className={`py-2 px-3 sm:px-4 font-semibold text-sm sm:text-base ${activeTab === 'credit-card' ? 'border-b-2 border-red-600 text-red-600' : 'text-gray-500'}`}>
+              <CreditCardIcon className="inline-block mr-1 sm:mr-2 h-4 sm:h-5 w-4 sm:w-5" />Credit/Debit Card
             </button>
-            <button onClick={() => setActiveTab('paypal')} className={`py-2 px-4 font-semibold ${activeTab === 'paypal' ? 'border-b-2 border-red-600 text-red-600' : 'text-gray-500'}`}>PayPal</button>
+            <button onClick={() => setActiveTab('paypal')} className={`py-2 px-3 sm:px-4 font-semibold text-sm sm:text-base ${activeTab === 'paypal' ? 'border-b-2 border-red-600 text-red-600' : 'text-gray-500'}`}>PayPal</button>
           </div>
         </div>
         {activeTab === 'credit-card' && (
-          <form className="space-y-6">
+          <form className="space-y-4 sm:space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700">Card Number</label>
-              <input type="text" placeholder="Card Number" className="w-full mt-1 p-3 border rounded-md" />
+              <input type="text" placeholder="Card Number" className="w-full mt-1 p-2 sm:p-3 border rounded-md text-sm sm:text-base" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Cardholder Name</label>
-              <input type="text" placeholder="Oonepted" className="w-full mt-1 p-3 border rounded-md" />
+              <input type="text" placeholder="Oonepted" className="w-full mt-1 p-2 sm:p-3 border rounded-md text-sm sm:text-base" />
             </div>
-            <div className="flex space-x-4">
+            <div className="flex space-x-2 sm:space-x-4">
               <div className="w-1/2">
                 <label className="block text-sm font-medium text-gray-700">Expiry Date (MM/YY)</label>
-                <input type="text" placeholder="MM/YY" className="w-full mt-1 p-3 border rounded-md" />
+                <input type="text" placeholder="MM/YY" className="w-full mt-1 p-2 sm:p-3 border rounded-md text-sm sm:text-base" />
               </div>
               <div className="w-1/2">
                 <label className="block text-sm font-medium text-gray-700">CVV</label>
-                <input type="text" placeholder="CVV" className="w-full mt-1 p-3 border rounded-md" />
+                <input type="text" placeholder="CVV" className="w-full mt-1 p-2 sm:p-3 border rounded-md text-sm sm:text-base" />
               </div>
             </div>
-            <div className="flex items-center text-sm text-gray-500"><LockIcon className="mr-2" /> Accepted</div>
+            <div className="flex items-center text-xs sm:text-sm text-gray-500"><LockIcon className="mr-2 w-4 h-4" /> Accepted</div>
             <div>
-              <h3 className="text-lg font-semibold mt-4 mb-2">Billing Address</h3>
+              <h3 className="text-base sm:text-lg font-semibold mt-4 mb-2">Billing Address</h3>
               <label className="flex items-center space-x-2">
                 <input type="radio" name="billingAddress" className="form-radio text-red-600" defaultChecked />
-                <span>Previously shipping address</span>
+                <span className="text-sm sm:text-base">Previously shipping address</span>
               </label>
             </div>
-            <button onClick={goToNextStep} type="button" className="w-full mt-4 bg-gray-800 text-white py-3 rounded-md font-semibold hover:bg-black">
+            <button onClick={goToNextStep} type="button" className="w-full mt-4 bg-gray-800 text-white py-2 sm:py-3 rounded-md font-semibold text-base sm:text-lg hover:bg-black">
               Continue to Review
             </button>
           </form>
         )}
         {activeTab === 'paypal' && (
-          <div className="text-center py-8">
-            <p className="mb-4">You will be redirected to PayPal to complete your payment.</p>
-            <button className="bg-blue-600 text-white font-bold py-3 px-8 rounded-full">
+          <div className="text-center py-6 sm:py-8">
+            <p className="mb-4 text-sm sm:text-base">You will be redirected to PayPal to complete your payment.</p>
+            <button className="bg-blue-600 text-white font-bold py-2 sm:py-3 px-6 sm:px-8 rounded-full text-sm sm:text-base">
               Pay with PayPal
             </button>
           </div>
@@ -165,37 +165,37 @@ const ReviewOrder = ({ cartItems, goToPreviousStep }) => {
 
   return (
     <div className="max-w-3xl mx-auto animate-on-scroll">
-      <h2 className="text-3xl font-bold text-center mb-8">Review & Place Order</h2>
-      <div className="bg-white p-8 rounded-lg shadow-lg">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8">Review & Place Order</h2>
+      <div className="bg-white p-4 sm:p-8 rounded-lg shadow-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
           <div>
-            <h3 className="font-bold text-lg mb-4">Shipping Address</h3>
-            <p className="text-gray-600">John Doe<br />123 Bookworm Lane<br />London, W1A 1AA<br />United Kingdom</p>
-            <button onClick={goToPreviousStep} className="text-blue-600 text-sm mt-2 hover:underline">Change</button>
+            <h3 className="font-bold text-base sm:text-lg mb-4">Shipping Address</h3>
+            <p className="text-gray-600 text-sm sm:text-base">John Doe<br />123 Bookworm Lane<br />London, W1A 1AA<br />United Kingdom</p>
+            <button onClick={goToPreviousStep} className="text-blue-600 text-xs sm:text-sm mt-2 hover:underline">Change</button>
           </div>
           <div>
-            <h3 className="font-bold text-lg mb-4">Payment Method</h3>
-            <p className="text-gray-600">Mastercard ending in 1234</p>
-            <button onClick={goToPreviousStep} className="text-blue-600 text-sm mt-2 hover:underline">Change</button>
+            <h3 className="font-bold text-base sm:text-lg mb-4">Payment Method</h3>
+            <p className="text-gray-600 text-sm sm:text-base">Mastercard ending in 1234</p>
+            <button onClick={goToPreviousStep} className="text-blue-600 text-xs sm:text-sm mt-2 hover:underline">Change</button>
           </div>
         </div>
-        <div className="mt-8 border-t pt-6">
-          <h3 className="font-bold text-lg mb-4">Items in Order</h3>
+        <div className="mt-6 sm:mt-8 border-t pt-4 sm:pt-6">
+          <h3 className="font-bold text-base sm:text-lg mb-4">Items in Order</h3>
           <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
             {cartItems.map(item => (
-              <div key={item.id} className="flex items-center justify-between py-2">
+              <div key={item.id} className="flex items-center justify-between py-2 text-sm sm:text-base">
                 <p>{item.title} (x{item.quantity})</p>
                 <p>£{(item.price * item.quantity).toFixed(2)}</p>
               </div>
             ))}
           </div>
         </div>
-        <div className="mt-6 border-t pt-6 space-y-2">
+        <div className="mt-4 sm:mt-6 border-t pt-4 sm:pt-6 space-y-2 text-sm sm:text-base">
           <div className="flex justify-between"><p>Subtotal</p><p>£{subtotal.toFixed(2)}</p></div>
           <div className="flex justify-between"><p>Shipping</p><p>£{shipping.toFixed(2)}</p></div>
-          <div className="flex justify-between font-bold text-xl"><p>Total</p><p>£{total.toFixed(2)}</p></div>
+          <div className="flex justify-between font-bold text-base sm:text-xl"><p>Total</p><p>£{total.toFixed(2)}</p></div>
         </div>
-        <button className="w-full mt-8 bg-red-600 text-white py-3 rounded-md font-semibold text-lg hover:bg-red-700">
+        <button className="w-full mt-6 sm:mt-8 bg-red-600 text-white py-2 sm:py-3 rounded-md font-semibold text-base sm:text-lg hover:bg-red-700">
           Place Order
         </button>
       </div>
@@ -230,7 +230,7 @@ const CheckoutFlow = () => {
   }, []);
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans">
+    <div className="flex min-h-screen bg-gray-50 font-sans flex-col lg:flex-row">
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -241,9 +241,9 @@ const CheckoutFlow = () => {
 
       <Sidebar activeLink={activeLink} setActiveLink={setActiveLink} />
 
-      <div className="flex-1 flex flex-col ml-64">
+      <div className="flex-1 flex flex-col lg:ml-64">
         <TopBar steps={[{ number: 1, name: 'Shopping Cart' }, { number: 2, name: 'Payment' }, { number: 3, name: 'Review & Place Order' }]} currentStep={step} />
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-8 overflow-y-auto pb-16 lg:pb-8">
           <div className="max-w-7xl mx-auto">
             {step === 1 && <ShoppingCart cartItems={cartItems} setCartItems={setCartItems} goToNextStep={() => setStep(2)} />}
             {step === 2 && <PaymentForm goToNextStep={() => setStep(3)} />}
