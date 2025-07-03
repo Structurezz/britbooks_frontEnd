@@ -20,6 +20,9 @@ import BestsellersPage from './pages/BestSeller';
 import SpecialOffersPage from './pages/SpecialOffer';
 import HelpAndSupportPage from './pages/Support';
 import CheckoutFlow from './pages/CheckOut';
+import MyWishlistPage from './pages/Wishlist';
+import AddressesPage from './pages/Addresses';
+import AccountSettingsPage from './pages/Account';
 
 // ScrollToTop component
 const ScrollToTop: React.FC = () => {
@@ -59,6 +62,14 @@ const App: React.FC = () => {
         <Route path="/special-offers" element={<SpecialOffersPage />} />
         <Route path="/help" element={<HelpAndSupportPage />} />
         <Route path="/checkout" element={<CheckoutFlow />} />
+        <Route path="/wishlist" element={<MyWishlistPage />} />
+        <Route path="/addresses" element={<AddressesPage />} />
+        <Route path="/settings" element={<AccountSettingsPage />} />
+        
+   
+       
+        
+       
         <Route path="*" element={<div>Page not found</div>} />
       </Routes>
     </>
