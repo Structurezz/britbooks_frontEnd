@@ -294,7 +294,7 @@ const BookDetailsModal = ({ book, onClose }: { book: typeof allBooks[0] | null; 
 
   const handleAddToCart = () => {
     toast.error('Please log in to add items to your cart!', {
-      icon: '🚫', 
+      icon: '🚫',
       style: {
         background: '#ffffff',
         color: '#333',
@@ -309,7 +309,8 @@ const BookDetailsModal = ({ book, onClose }: { book: typeof allBooks[0] | null; 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+      {/* Desktop and tablet: show from md up */}
+      <div className="hidden md:flex bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
         <div className="flex flex-col md:flex-row gap-6">
           <img src={book.imageUrl} alt={book.title} className="w-full md:w-1/3 h-96 object-cover rounded-md" />
           <div className="flex-1">
@@ -349,9 +350,71 @@ const BookDetailsModal = ({ book, onClose }: { book: typeof allBooks[0] | null; 
           </div>
         </div>
       </div>
+
+      {/* Mobile: show only below md */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-3">
+  <div className="flex flex-col bg-white rounded-lg w-full max-w-xs max-h-[80vh] shadow-lg">
+    {/* Scrollable content */}
+    <div className="flex-grow overflow-y-auto p-4">
+      <img
+        src={book.imageUrl}
+        alt={book.title}
+        className="w-full h-40 object-cover rounded-md mb-4 shadow-sm"
+      />
+      <h2 className="text-xl font-bold text-gray-900 mb-1 leading-snug truncate">{book.title}</h2>
+      <p className="text-sm text-gray-600 mb-2 italic truncate">by {book.author}</p>
+      <StarRating rating={book.rating} />
+      <p className="text-lg font-semibold text-red-600 mt-2 mb-3 tracking-wide">£{book.price.toFixed(2)}</p>
+
+      <div className="flex flex-wrap gap-2 text-xs text-gray-500 mb-4">
+        <span className="bg-gray-100 px-2 py-0.5 rounded-full">{book.category}</span>
+        <span>Published: {new Date(book.publicationDate).toLocaleDateString('en-GB')}</span>
+        <span>Pages: {book.pageCount}</span>
+      </div>
+
+      <h3 className="text-sm font-semibold mb-2 border-b border-gray-200 pb-1">About the Book</h3>
+      <p className="text-gray-700 mb-4 leading-relaxed text-sm">{book.synopsis}</p>
+
+      <h3 className="text-sm font-semibold mb-2 border-b border-gray-200 pb-1">Reader Reviews</h3>
+      <div className="space-y-3 text-xs text-gray-700">
+        {book.reviews.map((review, i) => (
+          <div key={i} className="border-t pt-2">
+            <div className="flex justify-between items-center mb-1">
+              <p className="font-semibold truncate">{review.user}</p>
+              <StarRating rating={review.rating} />
+            </div>
+            <p className="leading-snug truncate">{review.comment}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Buttons */}
+    <div className="p-4 border-t border-gray-200 flex space-x-3">
+      <button
+        className="flex-1 bg-red-600 text-white py-3 rounded-md font-semibold hover:bg-red-700 transition-colors"
+        onClick={handleAddToCart}
+      >
+        Add to Cart
+      </button>
+      <button
+        className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-md font-semibold hover:bg-gray-300 transition-colors"
+        onClick={onClose}
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
     </div>
   );
 };
+
 
 const FilterSidebar = ({ filters, setFilters }: { filters: any; setFilters: (filters: any) => void }) => {
   const handleCategoryChange = (category: string) => {
