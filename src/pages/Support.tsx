@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import TopBar from '../components/TopBar';
+import TopBar from '../components/Topbar';
 import Sidebar from '../components/Sidebar';
 
 // --- SVG ICONS ---
@@ -404,7 +404,7 @@ const HelpAndSupportPage = () => {
                   <div className="mt-6 max-w-lg mx-auto">
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                        <SearchIcon className="h-4 w-5" />
+                        <SearchIcon className="h-3 w-5" />
                       </span>
                       <input
                         type="text"

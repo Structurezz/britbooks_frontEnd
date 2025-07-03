@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Footer from '../components/footer';
 import { Menu, X } from 'lucide-react';
 
-// --- SVG ICONS ---
+
 const LeafIcon = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M11 20A7 7 0 0 1 4 13H2a10 10 0 0 0 10 10zM2 13a10 10 0 0 1 10-10 7 7 0 0 1 7 7h-2a5 5 0 0 0-5-5 8 8 0 0 0-8 8z"></path>
