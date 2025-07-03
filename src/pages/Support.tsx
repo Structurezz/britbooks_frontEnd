@@ -50,12 +50,12 @@ const FaqItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="border-b">
-      <button onClick={() => setIsOpen(!isOpen)} className="w-full flex justify-between items-center text-left py-4">
-        <span className="font-semibold text-gray-800">{question}</span>
-        <ChevronDownIcon className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      <button onClick={() => setIsOpen(!isOpen)} className="w-full flex justify-between items-center text-left py-3 sm:py-4">
+        <span className="font-semibold text-gray-800 text-sm sm:text-base">{question}</span>
+        <ChevronDownIcon className={`w-4 sm:w-5 h-4 sm:h-5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       {isOpen && (
-        <div className="pb-4 text-gray-600">
+        <div className="pb-3 sm:pb-4 text-gray-600 text-sm sm:text-base">
           <p>{answer}</p>
         </div>
       )}
@@ -172,13 +172,13 @@ const SupportTicketSidebar = ({ isOpen, onClose, onTicketSubmit }) => {
 
   return (
     <div
-      className={`fixed top-0 right-0 h-full w-96 bg-white shadow-lg z-50 transform transition-transform duration-300 ${
+      className={`fixed top-0 right-0 h-full w-full sm:w-80 bg-white shadow-lg z-50 transform transition-transform duration-300 ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
       <div className="flex flex-col h-full">
-        <div className="p-4 border-b flex justify-between items-center">
-          <h2 className="text-lg font-bold text-gray-800">
+        <div className="p-3 sm:p-4 border-b flex justify-between items-center">
+          <h2 className="text-base sm:text-lg font-bold text-gray-800">
             {view === 'ticketForm'
               ? 'Create Support Ticket'
               : view === 'ticketList'
@@ -186,94 +186,93 @@ const SupportTicketSidebar = ({ isOpen, onClose, onTicketSubmit }) => {
               : 'Support Chat'}
           </h2>
           <button onClick={onClose} className="text-gray-600 hover:text-gray-800">
-            <XIcon className="w-5 h-5" />
+            <XIcon className="w-4 sm:w-5 h-4 sm:h-5" />
           </button>
         </div>
-  
+
         {view === 'ticketForm' ? (
-          <form onSubmit={handleSubmitTicket} className="flex-1 p-4 flex flex-col">
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-800 mb-2">Subject</label>
+          <form onSubmit={handleSubmitTicket} className="flex-1 p-3 sm:p-4 flex flex-col">
+            <div className="mb-3 sm:mb-4">
+              <label className="block text-xs sm:text-sm font-semibold text-gray-800 mb-2">Subject</label>
               <input
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="Enter ticket subject..."
-                className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full p-2 sm:p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm sm:text-base"
                 required
               />
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-800 mb-2">Description</label>
+            <div className="mb-3 sm:mb-4">
+              <label className="block text-xs sm:text-sm font-semibold text-gray-800 mb-2">Description</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe your issue..."
-                className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 h-32 resize-none"
+                className="w-full p-2 sm:p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 h-24 sm:h-32 resize-none text-sm sm:text-base"
                 required
               />
             </div>
             <div className="flex justify-between">
               <button
                 type="submit"
-                className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
+                className="bg-red-600 text-white py-2 px-3 sm:px-4 rounded-md hover:bg-red-700 transition-colors text-sm sm:text-base"
               >
                 Submit Ticket
               </button>
               <button
                 type="button"
                 onClick={handleViewTickets}
-                className="text-blue-600 font-semibold text-sm py-2 px-4 hover:underline"
+                className="text-blue-600 font-semibold text-xs sm:text-sm py-2 px-3 sm:px-4 hover:underline"
               >
                 View Tickets
               </button>
             </div>
           </form>
         ) : view === 'ticketList' ? (
-          <div className="flex-1 p-4 overflow-y-auto">
+          <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
             <button
               onClick={() => setView('ticketForm')}
-              className="text-blue-600 font-semibold text-sm mb-4 hover:underline"
+              className="text-blue-600 font-semibold text-xs sm:text-sm mb-3 sm:mb-4 hover:underline"
             >
               Back to Create Ticket
             </button>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {mockTickets.map((ticket) => (
                 <div
                   key={ticket.id}
                   onClick={() => handleViewTicket(ticket)}
-                  className="p-4 border rounded-md hover:bg-gray-50 cursor-pointer"
+                  className="p-3 sm:p-4 border rounded-md hover:bg-gray-50 cursor-pointer"
                 >
-                  <p className="font-semibold text-gray-800">{ticket.subject}</p>
-                  <p className="text-sm text-gray-600">Status: {ticket.status}</p>
-                  <p className="text-sm text-gray-500">Created: {ticket.createdAt}</p>
+                  <p className="font-semibold text-gray-800 text-sm sm:text-base">{ticket.subject}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Status: {ticket.status}</p>
+                  <p className="text-xs sm:text-sm text-gray-500">Created: {ticket.createdAt}</p>
                 </div>
               ))}
             </div>
           </div>
         ) : (
-            <div className="flex flex-col h-full relative">
+          <div className="flex flex-col h-full relative">
             {/* Header */}
-            <div className="p-4">
+            <div className="p-3 sm:p-4">
               <button
                 onClick={() => setView('ticketList')}
-                className="text-blue-600 font-semibold text-sm mb-2 hover:underline"
+                className="text-blue-600 font-semibold text-xs sm:text-sm mb-2 sm:mb-3 hover:underline"
               >
                 Back to Tickets
               </button>
-              <p className="text-sm font-semibold text-gray-800">{selectedTicket?.subject}</p>
+              <p className="text-sm sm:text-base font-semibold text-gray-800">{selectedTicket?.subject}</p>
             </div>
-          
+
             {/* Scrollable messages */}
-            <div className="flex-1 overflow-y-auto p-4 border-t border-gray-200 mb-20"> 
-              {/* The mb-20 leaves space for the fixed input */}
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 border-t border-gray-200 mb-16 sm:mb-20">
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`mb-4 flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`mb-3 sm:mb-4 flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-xs p-3 rounded-lg ${
+                    className={`max-w-[80%] sm:max-w-xs p-2 sm:p-3 rounded-lg ${
                       message.sender === 'user'
                         ? 'bg-red-600 text-white'
                         : message.sender === 'admin'
@@ -281,24 +280,24 @@ const SupportTicketSidebar = ({ isOpen, onClose, onTicketSubmit }) => {
                         : 'bg-gray-100 text-gray-800'
                     }`}
                   >
-                    <p className="text-sm font-semibold">
+                    <p className="text-xs sm:text-sm font-semibold">
                       {message.sender === 'user'
                         ? 'You'
                         : message.sender === 'admin'
                         ? 'Admin'
                         : 'Grok (Bot)'}
                     </p>
-                    <p>{message.text}</p>
+                    <p className="text-xs sm:text-sm">{message.text}</p>
                     <p className="text-xs text-gray-500 mt-1">{message.timestamp}</p>
                   </div>
                 </div>
               ))}
             </div>
-          
+
             {/* Fixed input at the bottom */}
             <form
               onSubmit={handleSendMessage}
-              className="fixed bottom-0 right-0 w-96 p-4 border-t border-gray-200 bg-white flex items-center z-50"
+              className="fixed bottom-0 right-0 w-full sm:w-80 p-3 sm:p-4 border-t border-gray-200 bg-white flex items-center z-50"
               style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} // for iOS safe area
             >
               <input
@@ -306,22 +305,20 @@ const SupportTicketSidebar = ({ isOpen, onClose, onTicketSubmit }) => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type your message..."
-                className="flex-1 p-3 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="flex-1 p-2 sm:p-3 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm sm:text-base"
               />
               <button
                 type="submit"
-                className="bg-red-600 text-white p-3 rounded-r-md hover:bg-red-700 transition-transform hover:scale-105"
+                className="bg-red-600 text-white p-2 sm:p-3 rounded-r-md hover:bg-red-700 transition-transform hover:scale-105"
               >
-                <SendIcon className="w-5 h-4" />
+                <SendIcon className="w-4 sm:w-5 h-4 sm:h-5" />
               </button>
             </form>
           </div>
-          
         )}
       </div>
     </div>
   );
-  
 };
 
 // --- Main Help & Support Page Component ---
@@ -359,7 +356,7 @@ const HelpAndSupportPage = () => {
   }, []);
 
   return (
-    <div className="flex h-screen bg-gray-100 font-sans">
+    <div className="flex min-h-screen bg-gray-100 font-sans flex-col lg:flex-row">
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -391,25 +388,25 @@ const HelpAndSupportPage = () => {
 
       <Sidebar activeLink={activeLink} setActiveLink={setActiveLink} />
 
-      <div className="flex-1 flex flex-col ml-64">
+      <div className="flex-1 flex flex-col lg:ml-64">
         <TopBar />
-        <main className="flex-1 bg-gray-50 p-8 overflow-y-auto">
+        <main className="flex-1 bg-gray-50 p-4 sm:p-8 overflow-y-auto pb-16 lg:pb-8">
           <div className="max-w-4xl mx-auto">
             {/* Hero Section */}
-            <header className="hero-section text-white py-16 sm:py-20 animate-on-scroll">
-              <div className="max-w-4xl mx-auto px-6 sm:px-8">
+            <header className="hero-section text-white py-12 sm:py-16 animate-on-scroll">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6">
                 <div className="text-center">
-                  <h1 className="text-4xl md:text-5xl font-bold">Help & Support</h1>
-                  <p className="mt-4 text-lg md:text-xl max-w-3xl mx-auto text-gray-300">Create a ticket to chat with our support team or Grok, our AI assistant, or browse our FAQs for help.</p>
-                  <div className="mt-6 max-w-lg mx-auto">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">Help & Support</h1>
+                  <p className="mt-3 sm:mt-4 text-base sm:text-lg md:text-xl max-w-3xl mx-auto text-gray-300">Create a ticket to chat with our support team or Grok, our AI assistant, or browse our FAQs for help.</p>
+                  <div className="mt-4 sm:mt-6 max-w-lg mx-auto">
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                        <SearchIcon className="h-3 w-5" />
+                      <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                        <SearchIcon className="h-4 sm:h-5 w-4 sm:w-5" />
                       </span>
                       <input
                         type="text"
                         placeholder="Search our knowledge base..."
-                        className="w-full pl-12 pr-4 py-3 border rounded-full bg-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                        className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2 sm:py-3 border rounded-full bg-white focus:outline-none focus:ring-2 focus:ring-red-500 text-sm sm:text-base"
                       />
                     </div>
                   </div>
@@ -418,12 +415,12 @@ const HelpAndSupportPage = () => {
             </header>
 
             {/* FAQ Section */}
-            <section className="py-8 bg-gray-50">
-              <div className="max-w-4xl mx-auto px-6 sm:px-8">
-                <div className="animate-on-scroll mb-8">
-                  <h2 className="text-2xl font-bold text-gray-800">Frequently Asked Questions</h2>
+            <section className="py-6 sm:py-8 bg-gray-50">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6">
+                <div className="animate-on-scroll mb-6 sm:mb-8">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Frequently Asked Questions</h2>
                 </div>
-                <div className="bg-white p-8 rounded-lg shadow-sm animate-on-scroll">
+                <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm animate-on-scroll">
                   <div className="space-y-2">
                     {faqData.map((faq, index) => (
                       <FaqItem key={index} question={faq.question} answer={faq.answer} />
@@ -434,25 +431,25 @@ const HelpAndSupportPage = () => {
             </section>
 
             {/* Contact Us Section */}
-            <section className="py-8 bg-gray-50">
-              <div className="max-w-4xl mx-auto px-6 sm:px-8">
+            <section className="py-6 sm:py-8 bg-gray-50">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6">
                 <div className="text-center animate-on-scroll">
-                  <h2 className="text-2xl font-bold text-gray-800">Still Need Help?</h2>
-                  <p className="mt-2 text-gray-600">Our support team is here for you.</p>
-                  <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-                    <div className="bg-white p-6 rounded-lg shadow-sm text-left hover:shadow-lg transition-shadow">
-                      <MailIcon className="h-8 w-8 text-red-600 mb-2" />
-                      <h3 className="font-bold text-lg">Email Support</h3>
-                      <p className="text-sm text-gray-600 mt-1">Get a response within 24 hours.</p>
-                      <a href="mailto:support@britbooks.co.uk" className="text-blue-600 font-semibold text-sm mt-2 inline-block hover:underline">support@britbooks.co.uk</a>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Still Need Help?</h2>
+                  <p className="mt-2 text-gray-600 text-sm sm:text-base">Our support team is here for you.</p>
+                  <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-2xl mx-auto">
+                    <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm text-left hover:shadow-lg transition-shadow">
+                      <MailIcon className="h-6 sm:h-8 w-6 sm:w-8 text-red-600 mb-2" />
+                      <h3 className="font-bold text-base sm:text-lg">Email Support</h3>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">Get a response within 24 hours.</p>
+                      <a href="mailto:support@britbooks.co.uk" className="text-blue-600 font-semibold text-xs sm:text-sm mt-2 inline-block hover:underline">support@britbooks.co.uk</a>
                     </div>
-                    <div className="bg-white p-6 rounded-lg shadow-sm text-left hover:shadow-lg transition-shadow">
-                      <MessageSquareIcon className="h-8 w-8 text-red-600 mb-2" />
-                      <h3 className="font-bold text-lg">Live Chat</h3>
-                      <p className="text-sm text-gray-600 mt-1">Available Mon-Fri, 9am - 5pm GMT.</p>
+                    <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm text-left hover:shadow-lg transition-shadow">
+                      <MessageSquareIcon className="h-6 sm:h-8 w-6 sm:w-8 text-red-600 mb-2" />
+                      <h3 className="font-bold text-base sm:text-lg">Live Chat</h3>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">Available Mon-Fri, 9am - 5pm GMT.</p>
                       <button
                         onClick={() => setIsSupportSidebarOpen(true)}
-                        className="text-blue-600 font-semibold text-sm mt-2 inline-block hover:underline"
+                        className="text-blue-600 font-semibold text-xs sm:text-sm mt-2 inline-block hover:underline"
                       >
                         Start Chat
                       </button>
