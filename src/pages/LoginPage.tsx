@@ -132,7 +132,7 @@ const LoginPage = () => {
     // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 1000));
     // Mock validation (e.g., check for demo credentials)
-    if (email === 'test@example.com' && password === 'password123') {
+    if (email === 'aloysius@choicetextile.com' && password === 'password123') {
       return { success: true };
     }
     return { success: false };
