@@ -208,7 +208,8 @@ const Homepage = () => {
 </div>
 
 
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
+<div className="w-full mx-auto px-4 md:px-8">
+
             {/* Book Shelves */}
             <BookShelf title="New Arrivals" books={bookData} />
             <BookShelf title="Popular Books" books={popularBooks} />
