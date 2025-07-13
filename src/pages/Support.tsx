@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Footer from '../components/Footer';
+import Footer from '../components/footer';
 import TopBar from '../components/Topbar';
 
 // --- SVG ICONS ---
