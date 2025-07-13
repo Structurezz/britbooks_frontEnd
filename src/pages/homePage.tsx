@@ -64,9 +64,9 @@ const BookShelf = ({ title, books: allBooks }) => {
   };
 
   return (
-    <section className="py-8 animate-on-scroll">
+    <section className="py-6 sm:py-8 animate-on-scroll">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-blue-800">{title}</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-blue-800">{title}</h2>
         <div className="flex space-x-2">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
@@ -85,7 +85,7 @@ const BookShelf = ({ title, books: allBooks }) => {
         </div>
       </div>
       <div className="max-h-[480px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {paginatedBooks.map((book, index) => (
             <BookCard key={index} {...book} />
           ))}
@@ -159,7 +159,7 @@ const Homepage = () => {
         
         <main className="container mx-auto px-4 sm:px-8">
           {/* Hero Section with Video Background */}
-          <section className="relative text-white my-8 py-20 px-6 sm:px-12 rounded-lg overflow-hidden">
+          <section className="relative text-white my-4 sm:my-8 py-12 sm:py-20 px-4 sm:px-12 rounded-lg overflow-hidden">
             <video
               autoPlay
               muted
@@ -173,13 +173,11 @@ const Homepage = () => {
               />
               Your browser does not support the video tag.
             </video>
-
             <div className="absolute inset-0 bg-black opacity-50 rounded-lg"></div>
-
-            <div className="relative z-10 flex justify-between items-center">
+            <div className="relative z-10 text-center sm:text-left">
               <div className="animate-on-scroll">
-                <h1 className="text-3xl sm:text-5xl font-bold leading-tight">
-                  Best Used Book Platform <br /> in the UK
+                <h1 className="text-2xl sm:text-5xl font-bold leading-tight">
+                  Best Used Book Platform <br className="block sm:hidden" /> in the UK
                 </h1>
                 <p className="text-gray-300 mt-2 text-sm sm:text-base">
                   Discover thousands of quality pre-owned books at unbeatable prices.
@@ -189,33 +187,33 @@ const Homepage = () => {
           </section>
 
           {/* Welcome Section */}
-          <div className="max-w-7xl mx-auto py-16 px-4 md:px-8 flex flex-col md:flex-row items-center md:items-start gap-10 md:gap-16">
-            <div className="md:w-1/2 flex justify-center md:justify-start">
+          <div className="max-w-7xl mx-auto py-8 sm:py-16 px-4 sm:px-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-16">
+            <div className="w-full sm:w-1/2 flex justify-center sm:justify-start">
               <img
                 src="https://media.istockphoto.com/id/185266132/photo/portrait-of-a-cute-teenage-girl.jpg?s=612x612&w=0&k=20&c=7oyxKo75xTGO_k5v2zsCBeu7GWG-7eryUyyu42o8Ra0="
                 alt="Woman Reading"
-                className="w-full max-w-lg object-contain"
+                className="w-full max-w-md sm:max-w-lg object-contain"
               />
             </div>
-            <div className="md:w-1/2">
-              <h2 className="text-4xl md:text-5xl font-light leading-tight mb-6">
+            <div className="w-full sm:w-1/2">
+              <h2 className="text-3xl sm:text-5xl font-light leading-tight mb-4 sm:mb-6">
                 Welcome to <span className="font-bold text-blue-900">brit</span>
                 <span className="font-bold text-red-600">books</span>
-                <br />
+                <br className="block sm:hidden" />
                 <span className="font-bold text-gray-900">online books</span> super store
               </h2>
-              <p className="text-gray-700 text-lg leading-relaxed">
+              <p className="text-gray-700 text-base sm:text-lg leading-relaxed">
                 the UK’s most trusted platform for high-quality secondhand books. Our mission is simple: to make reading more affordable, sustainable, and accessible to everyone. 
                 Whether you’re a curious student hunting for academic texts, a parent looking for bedtime stories, or an avid reader building your personal library, we’ve got shelves filled just for you.
               </p>
             </div>
           </div>
 
-          <div className="w-full mx-auto px-4 md:px-8">
+          <div className="w-full mx-auto px-4 sm:px-8">
             {/* Book Shelves */}
             <BookShelf title="New Arrivals" books={bookData} />
             <BookShelf title="Popular Books" books={popularBooks} />
-            <div className="py-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="py-8 sm:py-12 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
               {[
                 { title: "Top 10 Best Sellers", image: "https://cdn-icons-png.flaticon.com/512/2331/2331970.png" },
                 { title: "Order now and get 10% discount for limited time", image: "https://cdn-icons-png.flaticon.com/512/1042/1042306.png" },
@@ -223,7 +221,7 @@ const Homepage = () => {
               ].map((item, idx) => (
                 <div
                   key={idx}
-                  className="relative h-56 rounded-lg overflow-hidden text-white flex flex-col items-center justify-center text-center"
+                  className="relative h-48 sm:h-56 rounded-lg overflow-hidden text-white flex flex-col items-center justify-center text-center"
                   style={{
                     backgroundImage: `url(${item.image})`,
                     backgroundSize: 'contain',
@@ -234,8 +232,8 @@ const Homepage = () => {
                 >
                   <div className="absolute inset-0 bg-black bg-opacity-40"></div>
                   <div className="relative z-10 p-4">
-                    <h3 className="text-2xl font-bold mb-4">{item.title}</h3>
-                    <button className="bg-white text-black px-6 py-2 rounded-full hover:bg-gray-200 transition">
+                    <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">{item.title}</h3>
+                    <button className="bg-white text-black px-4 sm:px-6 py-2 rounded-full hover:bg-gray-200 transition text-sm sm:text-base">
                       SHOP NOW!
                     </button>
                   </div>
@@ -249,7 +247,7 @@ const Homepage = () => {
           </div>
 
           {/* Promotional Banners with Image Backgrounds */}
-          <div className="max-w-7xl mx-auto py-12 px-4 md:px-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-8 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
             {[
               { title: "Free Shipping", subtitle: "Orders Over £100", image: "https://media.istockphoto.com/id/1309243817/vector/fast-delivery-truck-with-motion-lines-online-delivery-express-delivery-quick-move-fast.jpg?s=612x612&w=0&k=20&c=l2JlE6VQ4uRS6jABMS558puDgTyhEJW0bSiPhbBgXMc=" },
               { title: "Money Guarantee", subtitle: "30 Day Money Back Guarantee", image: "https://media.istockphoto.com/id/1129401378/photo/a-hand-with-protective-shield-containing-a-currency-unit-inside.jpg?s=612x612&w=0&k=20&c=R3Y_IIp64RvH7g7YmDDirCwiu3QbFRE1KDV8X-R1peo=" },
@@ -257,7 +255,7 @@ const Homepage = () => {
             ].map((item, idx) => (
               <div
                 key={idx}
-                className="relative h-56 rounded-lg overflow-hidden text-white flex items-center justify-center text-center"
+                className="relative h-48 sm:h-56 rounded-lg overflow-hidden text-white flex items-center justify-center text-center"
                 style={{
                   backgroundImage: `url(${item.image})`,
                   backgroundSize: 'cover',
@@ -266,8 +264,8 @@ const Homepage = () => {
               >
                 <div className="absolute inset-0 bg-black bg-opacity-40"></div>
                 <div className="relative z-10 p-4">
-                  <h3 className="text-2xl font-bold mb-2">{item.title}</h3>
-                  <p className="text-sm">{item.subtitle}</p>
+                  <h3 className="text-xl sm:text-2xl font-bold mb-2">{item.title}</h3>
+                  <p className="text-xs sm:text-sm">{item.subtitle}</p>
                 </div>
               </div>
             ))}

@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Star } from "lucide-react";
+import { Star, X, Filter } from "lucide-react";
 import Footer from "../components/footer";
 import TopBar from "../components/Topbar";
-import { books } from "../data/books"; // Import the 1 million books
+import { books } from "../data/books";
 
 // --- Reusable Components ---
 
@@ -60,7 +60,7 @@ const BookCard = ({ book }) => {
 };
 
 // Filter Sidebar with Campaign Ads
-const FilterSidebar = ({ filters, setFilters }) => {
+const FilterSidebar = ({ filters, setFilters, isOpen, setIsOpen }) => {
   const priceRanges = [
     { label: "Under £2.99", min: 0, max: 2.99 },
     { label: "£3.00 - £5.99", min: 3, max: 5.99 },
@@ -165,76 +165,172 @@ const FilterSidebar = ({ filters, setFilters }) => {
   ];
 
   return (
-    <aside className="w-full lg:w-1/4 xl:w-1/5 pr-6">
-      <div className="bg-gradient-to-br from-gray-50 to-white p-6 rounded-xl shadow-lg overflow-y-auto max-h-[calc(100vh-200px)]">
-        <h3 className="font-bold text-xl text-gray-900 mb-6 border-b-2 border-red-100 pb-2">Filters & Offers</h3>
+    <>
+      {/* Mobile Filter Button */}
+      <div className="lg:hidden mb-4">
+        <button
+          onClick={() => setIsOpen(true)}
+          className="w-full bg-red-600 text-white font-medium py-2 rounded-md flex items-center justify-center gap-2"
+        >
+          <Filter size={20} />
+          Filters & Offers
+        </button>
+      </div>
 
-        <div className="mb-8">
-          {renderFilterSection("Categories", filterOptions.category, "category")}
-          {renderFilterSection("Condition", filterOptions.condition, "condition")}
-          <div className="mb-6">
-            <h4 className="font-medium text-gray-700 mb-2 text-sm uppercase tracking-wide">Price Range</h4>
-            <ul className="space-y-2">
-              {filterOptions.price.map((range) => (
-                <li key={range.label} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id={`price-${range.label}`}
-                    checked={filters.priceMin === range.min && filters.priceMax === range.max}
-                    onChange={() => handlePriceFilter(range)}
-                    className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-                  />
-                  <label
-                    htmlFor={`price-${range.label}`}
-                    className="ml-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer"
-                  >
-                    {range.label} <span className="text-gray-400">({range.count})</span>
-                  </label>
-                </li>
-              ))}
-            </ul>
+      {/* Mobile Filter Modal */}
+      <div
+        className={`fixed inset-0 z-50 bg-white transform transition-transform duration-300 ease-in-out lg:hidden ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h3 className="font-bold text-xl text-gray-900">Filters & Offers</h3>
+            <button onClick={() => setIsOpen(false)} className="p-2">
+              <X size={24} className="text-gray-700" />
+            </button>
           </div>
-          <button
-            onClick={() => setFilters({})}
-            className="w-full bg-red-600 text-white font-medium py-2 rounded-md hover:bg-red-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-red-500 mt-2"
-          >
-            Clear Filters
-          </button>
-        </div>
-
-        <div className="mt-8">
-          <h4 className="font-bold text-lg text-gray-900 mb-4">Special Offers</h4>
-          {campaignAds.map((ad) => (
-            <div
-              key={ad.id}
-              className="mb-4 bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
-            >
-              {ad.video ? (
-                <video
-                  className="w-full h-24 object-cover"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                >
-                  <source src={ad.video} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              ) : (
-                <img src={ad.image} alt={ad.title} className="w-full h-24 object-cover" />
-              )}
-              <div className="p-3">
-                <h5 className="font-semibold text-gray-800 text-sm">{ad.title}</h5>
-                <p className="text-xs text-gray-600">{ad.description}</p>
-                <Link to={ad.link} className="text-red-600 text-xs font-medium hover:underline mt-1 inline-block">
-                  Shop Now
-                </Link>
+          <div className="p-4 overflow-y-auto flex-grow">
+            <div className="mb-8">
+              {renderFilterSection("Categories", filterOptions.category, "category")}
+              {renderFilterSection("Condition", filterOptions.condition, "condition")}
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-700 mb-2 text-sm uppercase tracking-wide">Price Range</h4>
+                <ul className="space-y-2">
+                  {filterOptions.price.map((range) => (
+                    <li key={range.label} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`price-${range.label}`}
+                        checked={filters.priceMin === range.min && filters.priceMax === range.max}
+                        onChange={() => handlePriceFilter(range)}
+                        className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                      />
+                      <label
+                        htmlFor={`price-${range.label}`}
+                        className="ml-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer"
+                      >
+                        {range.label} <span className="text-gray-400">({range.count})</span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
               </div>
+              <button
+                onClick={() => setFilters({})}
+                className="w-full bg-red-600 text-white font-medium py-2 rounded-md hover:bg-red-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-red-500 mt-2"
+              >
+                Clear Filters
+              </button>
             </div>
-          ))}
+
+            <div className="mt-8">
+              <h4 className="font-bold text-lg text-gray-900 mb-4">Special Offers</h4>
+              {campaignAds.map((ad) => (
+                <div
+                  key={ad.id}
+                  className="mb-4 bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
+                >
+                  {ad.video ? (
+                    <video
+                      className="w-full h-24 object-cover"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                    >
+                      <source src={ad.video} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <img src={ad.image} alt={ad.title} className="w-full h-24 object-cover" />
+                  )}
+                  <div className="p-3">
+                    <h5 className="font-semibold text-gray-800 text-sm">{ad.title}</h5>
+                    <p className="text-xs text-gray-600">{ad.description}</p>
+                    <Link to={ad.link} className="text-red-600 text-xs font-medium hover:underline mt-1 inline-block">
+                      Shop Now
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
-    </aside>
+
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:block w-full lg:w-1/4 xl:w-1/5 pr-6">
+        <div className="bg-gradient-to-br from-gray-50 to-white p-6 rounded-xl shadow-lg overflow-y-auto max-h-[calc(100vh-200px)]">
+          <h3 className="font-bold text-xl text-gray-900 mb-6 border-b-2 border-red-100 pb-2">Filters & Offers</h3>
+
+          <div className="mb-8">
+            {renderFilterSection("Categories", filterOptions.category, "category")}
+            {renderFilterSection("Condition", filterOptions.condition, "condition")}
+            <div className="mb-6">
+              <h4 className="font-medium text-gray-700 mb-2 text-sm uppercase tracking-wide">Price Range</h4>
+              <ul className="space-y-2">
+                {filterOptions.price.map((range) => (
+                  <li key={range.label} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`price-${range.label}`}
+                      checked={filters.priceMin === range.min && filters.priceMax === range.max}
+                      onChange={() => handlePriceFilter(range)}
+                      className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                    />
+                    <label
+                      htmlFor={`price-${range.label}`}
+                      className="ml-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer"
+                    >
+                      {range.label} <span className="text-gray-400">({range.count})</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <button
+              onClick={() => setFilters({})}
+              className="w-full bg-red-600 text-white font-medium py-2 rounded-md hover:bg-red-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-red-500 mt-2"
+            >
+              Clear Filters
+            </button>
+          </div>
+
+          <div className="mt-8">
+            <h4 className="font-bold text-lg text-gray-900 mb-4">Special Offers</h4>
+            {campaignAds.map((ad) => (
+              <div
+                key={ad.id}
+                className="mb-4 bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
+              >
+                {ad.video ? (
+                  <video
+                    className="w-full h-24 object-cover"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                  >
+                    <source src={ad.video} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <img src={ad.image} alt={ad.title} className="w-full h-24 object-cover" />
+                )}
+                <div className="p-3">
+                  <h5 className="font-semibold text-gray-800 text-sm">{ad.title}</h5>
+                  <p className="text-xs text-gray-600">{ad.description}</p>
+                  <Link to={ad.link} className="text-red-600 text-xs font-medium hover:underline mt-1 inline-block">
+                    Shop Now
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </>
   );
 };
 
@@ -242,7 +338,8 @@ const FilterSidebar = ({ filters, setFilters }) => {
 const CategoryMainContent = () => {
   const [filters, setFilters] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(12); // Default items per page
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const filteredBooks = useMemo(() => {
     return books.filter((book) => {
@@ -281,14 +378,14 @@ const CategoryMainContent = () => {
   }, [currentPage, totalPages, itemsPerPage]);
 
   return (
-    <div className="container mx-auto px-4 sm:px-8 py-8">
-      <div className="flex flex-col lg:flex-row gap-6">
-        <FilterSidebar filters={filters} setFilters={setFilters} />
+    <div className="container mx-auto px-4 sm:px-8 py-6 sm:py-8">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
+        <FilterSidebar filters={filters} setFilters={setFilters} isOpen={isFilterOpen} setIsOpen={setIsFilterOpen} />
 
         <div className="w-full lg:w-3/4">
-          <div className="flex flex-wrap justify-between items-center border-b border-gray-200 py-3 mb-6">
-            <div className="flex items-center space-x-3">
-              <label htmlFor="sort-by" className="font-medium text-gray-700">Sort By:</label>
+          <div className="flex flex-col sm:flex-row sm:flex-wrap justify-between items-center border-b border-gray-200 py-3 mb-4 sm:mb-6">
+            <div className="flex items-center space-x-3 mb-2 sm:mb-0">
+              <label htmlFor="sort-by" className="font-medium text-gray-700 text-sm">Sort By:</label>
               <select
                 id="sort-by"
                 className="border border-gray-300 rounded-md py-1.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -300,18 +397,18 @@ const CategoryMainContent = () => {
                 <option value="price">Price</option>
               </select>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 mb-2 sm:mb-0">
               {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredBooks.length)} of {filteredBooks.length}
             </div>
             <div className="flex items-center space-x-3">
-              <label htmlFor="show" className="font-medium text-gray-700">Show:</label>
+              <label htmlFor="show" className="font-medium text-gray-700 text-sm">Show:</label>
               <select
                 id="show"
                 value={itemsPerPage}
                 onChange={(e) => {
                   const newItemsPerPage = parseInt(e.target.value);
                   setItemsPerPage(newItemsPerPage);
-                  setCurrentPage(1); // Reset to first page on change
+                  setCurrentPage(1);
                 }}
                 className="border border-gray-300 rounded-md py-1.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
               >
@@ -322,7 +419,7 @@ const CategoryMainContent = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {currentBooks.map((book) => (
               <BookCard key={book.id} book={book} />
             ))}
@@ -332,10 +429,10 @@ const CategoryMainContent = () => {
           )}
 
           {filteredBooks.length > itemsPerPage && (
-            <div className="mt-6 flex justify-center items-center space-x-2">
+            <div className="mt-4 sm:mt-6 flex flex-wrap justify-center items-center gap-2 sm:gap-3">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
+                className="px-3 sm:px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-colors text-sm"
                 disabled={currentPage === 1}
               >
                 Previous
@@ -344,22 +441,24 @@ const CategoryMainContent = () => {
                 <button
                   key={page}
                   onClick={() => handlePageChange(page)}
-                  className={`px-4 py-2 rounded-md ${currentPage === page ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} transition-colors`}
+                  className={`px-3 sm:px-4 py-2 rounded-full text-sm ${
+                    currentPage === page ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  } transition-colors`}
                 >
                   {page}
                 </button>
               ))}
-              {totalPages > visiblePages[visiblePages.length - 1] && <span className="text-gray-500">...</span>}
+              {totalPages > visiblePages[visiblePages.length - 1] && <span className="text-gray-500 text-sm">...</span>}
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
+                className="px-3 sm:px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-colors text-sm"
                 disabled={currentPage === totalPages}
               >
                 Next
               </button>
               <button
                 onClick={() => handlePageChange(totalPages)}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors ml-2"
+                className="px-3 sm:px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors text-sm"
               >
                 Load More
               </button>
