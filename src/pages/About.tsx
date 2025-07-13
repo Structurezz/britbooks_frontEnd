@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import Footer from '../components/footer';
 import { Menu, X } from 'lucide-react';
-import Topbar from '../components/topbar';
+import Topbar from '../components/Topbar';
 
 const AboutUs = () => {
   useEffect(() => {
