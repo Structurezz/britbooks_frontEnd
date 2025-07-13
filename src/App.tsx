@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
+
 import Homepage from './pages/homePage';
 import ExplorePage from './pages/ExplorePage';
 import LoginPage from './pages/LoginPage';
@@ -23,6 +24,10 @@ import CheckoutFlow from './pages/CheckOut';
 import MyWishlistPage from './pages/Wishlist';
 import AddressesPage from './pages/Addresses';
 import AccountSettingsPage from './pages/Account';
+import PopularBooksPage from './pages/PopularBooks';
+import ClearancePage from './pages/ClearancePage';
+import ReturnPolicyPage from './pages/PrivacyPolicy';
+import { AuthProvider } from './context/authContext'; // ✅ Import AuthProvider
 
 // ScrollToTop component
 const ScrollToTop: React.FC = () => {
@@ -39,7 +44,7 @@ const App: React.FC = () => {
   console.log("App rendered");
 
   return (
-    <>
+    <AuthProvider> {/* ✅ Wrap the entire app in AuthProvider */}
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Homepage />} />
@@ -67,9 +72,16 @@ const App: React.FC = () => {
         <Route path="/wishlist" element={<MyWishlistPage />} />
         <Route path="/addresses" element={<AddressesPage />} />
         <Route path="/settings" element={<AccountSettingsPage />} />
+        <Route path="/popular-books" element={<PopularBooksPage />} />
+        <Route path="/clearance" element={<ClearancePage />} />
+        <Route path="/return-policy" element={<ReturnPolicyPage />} />
+        
+       
+        
+      
         <Route path="*" element={<div>Page not found</div>} />
       </Routes>
-    </>
+    </AuthProvider>
   );
 };
 

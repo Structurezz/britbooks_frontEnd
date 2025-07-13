@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import TopBar from '../components/Topbar';
-import Sidebar from '../components/Sidebar';
+import Footer from '../components/footer'; // Added Footer import
 
 // --- SVG ICONS ---
 const TrashIcon = (props) => (
@@ -230,7 +230,7 @@ const CheckoutFlow = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-gray-50 font-sans flex-col lg:flex-row">
+    <div className="flex min-h-screen bg-gray-50 font-sans flex-col">
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -239,18 +239,15 @@ const CheckoutFlow = () => {
         .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
       `}</style>
 
-      <Sidebar activeLink={activeLink} setActiveLink={setActiveLink} />
-
-      <div className="flex-1 flex flex-col lg:ml-64">
-        <TopBar steps={[{ number: 1, name: 'Shopping Cart' }, { number: 2, name: 'Payment' }, { number: 3, name: 'Review & Place Order' }]} currentStep={step} />
-        <main className="flex-1 p-4 sm:p-8 overflow-y-auto pb-16 lg:pb-8">
-          <div className="max-w-7xl mx-auto">
-            {step === 1 && <ShoppingCart cartItems={cartItems} setCartItems={setCartItems} goToNextStep={() => setStep(2)} />}
-            {step === 2 && <PaymentForm goToNextStep={() => setStep(3)} />}
-            {step === 3 && <ReviewOrder cartItems={cartItems} goToPreviousStep={() => setStep(2)} />}
-          </div>
-        </main>
-      </div>
+      <TopBar steps={[{ number: 1, name: 'Shopping Cart' }, { number: 2, name: 'Payment' }, { number: 3, name: 'Review & Place Order' }]} currentStep={step} />
+      <main className="flex-1 p-4 sm:p-8 overflow-y-auto pb-16 lg:pb-8">
+        <div className="max-w-7xl mx-auto">
+          {step === 1 && <ShoppingCart cartItems={cartItems} setCartItems={setCartItems} goToNextStep={() => setStep(2)} />}
+          {step === 2 && <PaymentForm goToNextStep={() => setStep(3)} />}
+          {step === 3 && <ReviewOrder cartItems={cartItems} goToPreviousStep={() => setStep(2)} />}
+        </div>
+      </main>
+      <Footer /> {/* Added Footer component */}
     </div>
   );
 };

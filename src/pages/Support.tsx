@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Footer from '../components/Footer';
 import TopBar from '../components/Topbar';
-import Sidebar from '../components/Sidebar';
 
 // --- SVG ICONS ---
 const ChevronDownIcon = (props) => (
@@ -323,7 +323,6 @@ const SupportTicketSidebar = ({ isOpen, onClose, onTicketSubmit }) => {
 
 // --- Main Help & Support Page Component ---
 const HelpAndSupportPage = () => {
-  const [activeLink, setActiveLink] = useState('help');
   const [isSupportSidebarOpen, setIsSupportSidebarOpen] = useState(false);
   const [tickets, setTickets] = useState(mockTickets);
 
@@ -356,7 +355,7 @@ const HelpAndSupportPage = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-gray-100 font-sans flex-col lg:flex-row">
+    <div className="flex min-h-screen bg-gray-100 font-sans flex-col">
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -386,9 +385,7 @@ const HelpAndSupportPage = () => {
         }
       `}</style>
 
-      <Sidebar activeLink={activeLink} setActiveLink={setActiveLink} />
-
-      <div className="flex-1 flex flex-col lg:ml-64">
+      <div className="flex-1 flex flex-col">
         <TopBar />
         <main className="flex-1 bg-gray-50 p-4 sm:p-8 overflow-y-auto pb-16 lg:pb-8">
           <div className="max-w-4xl mx-auto">
@@ -460,6 +457,7 @@ const HelpAndSupportPage = () => {
             </section>
           </div>
         </main>
+        <Footer />
       </div>
 
       <SupportTicketSidebar

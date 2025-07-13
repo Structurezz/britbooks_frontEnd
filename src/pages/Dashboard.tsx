@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
 import TopBar from '../components/Topbar';
 
 // --- SVG ICONS for MainContent ---
@@ -67,7 +66,7 @@ const topPicks = [
 // Mock data for category books in modal
 const categoryBooks = {
   'Fiction': [
-    { title: 'The Midnight Library', author: 'Matt Haig', price: 14.99, imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrlxe14gdf9GY9IIAhaQ4S2O-U-u8afql_BQ&s', synopsis: 'Nora Seed explores alternate lives in a magical library.' },
+    { title: 'The Midnight Library', author: 'Matt Haig', price: 14.99, imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=0B2t0MxvPdy28a80cPhSNaQBfZgbOFgTHh5fo3g&s', synopsis: 'Nora Seed explores alternate lives in a magical library.' },
     { title: 'Klara and the Sun', author: 'Kazuo Ishiguro', price: 16.75, imageUrl: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1603206535i/54120408.jpg', synopsis: 'An Artificial Friend observes humanity in a tech-driven world.' },
   ],
   'Mystery & Thriller': [
@@ -386,12 +385,9 @@ const DashboardPage = () => {
   const [activeLink, setActiveLink] = useState('dashboard');
 
   return (
-    <div className="flex min-h-screen bg-gray-100 font-sans flex-col lg:flex-row">
-      <Sidebar activeLink={activeLink} setActiveLink={setActiveLink} />
-      <div className="flex-1 flex flex-col lg:ml-64">
-        <TopBar />
-        <MainContent />
-      </div>
+    <div className="flex min-h-screen bg-gray-100 font-sans flex-col">
+      <TopBar />
+      <MainContent />
     </div>
   );
 };

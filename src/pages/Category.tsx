@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
+import Footer from '../components/Footer';
 import TopBar from '../components/Topbar';
 import BrowseCategoryDetail from '../components/BrowseCategoryDetail';
 
@@ -373,7 +373,6 @@ const BritBooksMainContent = () => {
 
 // --- CategoryBrowsePage Component ---
 const CategoryBrowsePage = () => {
-  const [activeLink, setActiveLink] = useState('browse');
   const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
 
   const toggleFilterSidebar = () => {
@@ -381,22 +380,20 @@ const CategoryBrowsePage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100 font-sans flex-col lg:flex-row">
-      {/* Main Sidebar (handled by Sidebar component) */}
-      <Sidebar activeLink={activeLink} setActiveLink={setActiveLink} />
-
+    <div className="flex min-h-screen bg-gray-100 font-sans flex-col">
       {/* Overlay for mobile when filter sidebar is open */}
       {isFilterSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={() => setIsFilterSidebarOpen(false)}
         ></div>
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col lg:ml-64">
+      <div className="flex-1 flex flex-col">
         <TopBar toggleFilterSidebar={toggleFilterSidebar} />
         <BritBooksMainContent />
+        <Footer />
       </div>
     </div>
   );

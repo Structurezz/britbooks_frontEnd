@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import TopBar from '../components/Topbar';
-import Sidebar from '../components/Sidebar';
+import Footer from '../components/Footer'; // Assuming Footer is a separate component
 
 // --- SVG ICONS ---
 const XIcon = (props) => (
@@ -327,7 +327,7 @@ const AccountSettingsPage = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-gray-50 font-sans flex-col lg:flex-row">
+    <div className="min-h-screen bg-gray-50 font-sans flex-col flex">
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -336,14 +336,11 @@ const AccountSettingsPage = () => {
         .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
       `}</style>
 
-      <Sidebar activeLink={activeLink} setActiveLink={setActiveLink} />
-
-      <div className="flex-1 flex flex-col lg:ml-64">
-        <TopBar />
-        <main className="flex-1 p-4 sm:p-8 overflow-y-auto pb-16 lg:pb-8">
-          <AccountSettingsForm userData={userData} setUserData={setUserData} />
-        </main>
-      </div>
+      <TopBar />
+      <main className="flex-1 p-4 sm:p-8 overflow-y-auto pb-16">
+        <AccountSettingsForm userData={userData} setUserData={setUserData} />
+      </main>
+      <Footer /> {/* Added Footer at the bottom */}
     </div>
   );
 };

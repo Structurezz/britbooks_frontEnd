@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import TopBar from '../components/Topbar';
-import Sidebar from '../components/Sidebar';
+import Footer from '../components/footer'; // ✅ Footer imported
 
-// --- SVG ICONS ---
+// --- SVG ICON ---
 const TrashIcon = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="3 6 5 6 21 6"></polyline>
@@ -16,14 +16,26 @@ const TrashIcon = (props) => (
 
 // --- MOCK DATA ---
 const initialWishlistItems = [
-  { id: 1, title: 'The Stardust Thief', author: 'Chelsea Abdullah', price: 18.99, imageUrl: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1631541333l/58983556.jpg' },
-  { id: 2, title: 'Lessons in Chemistry', author: 'Bonnie Garmus', price: 15.50, imageUrl: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1634768234l/58065033.jpg' },
+  {
+    id: 1,
+    title: 'The Stardust Thief',
+    author: 'Chelsea Abdullah',
+    price: 18.99,
+    imageUrl: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1631541333l/58983556.jpg',
+  },
+  {
+    id: 2,
+    title: 'Lessons in Chemistry',
+    author: 'Bonnie Garmus',
+    price: 15.5,
+    imageUrl: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1634768234l/58065033.jpg',
+  },
 ];
 
 // --- Wishlist Component ---
 const Wishlist = ({ wishlistItems, setWishlistItems }) => {
   const removeItem = (id) => {
-    setWishlistItems(wishlistItems.filter(item => item.id !== id));
+    setWishlistItems(wishlistItems.filter((item) => item.id !== id));
   };
 
   return (
@@ -32,7 +44,9 @@ const Wishlist = ({ wishlistItems, setWishlistItems }) => {
       {wishlistItems.length === 0 ? (
         <div className="text-center py-8 sm:py-12 animate-on-scroll">
           <p className="text-base sm:text-lg text-gray-600">Your wishlist is empty.</p>
-          <p className="text-sm sm:text-base text-gray-500 mt-2">Add books to your wishlist to keep track of titles you love!</p>
+          <p className="text-sm sm:text-base text-gray-500 mt-2">
+            Add books to your wishlist to keep track of titles you love!
+          </p>
           <a
             href="/books"
             className="inline-block mt-4 sm:mt-6 bg-red-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-md font-semibold text-sm sm:text-base hover:bg-red-700 transition-colors"
@@ -42,18 +56,20 @@ const Wishlist = ({ wishlistItems, setWishlistItems }) => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-on-scroll">
-          {wishlistItems.map(item => (
+          {wishlistItems.map((item) => (
             <div key={item.id} className="bg-white p-3 sm:p-4 rounded-lg shadow-sm flex flex-col">
-              <img src={item.imageUrl} alt={item.title} className="w-full h-40 sm:h-48 object-cover rounded-md mb-3 sm:mb-4" />
+              <img
+                src={item.imageUrl}
+                alt={item.title}
+                className="w-full h-40 sm:h-48 object-cover rounded-md mb-3 sm:mb-4"
+              />
               <div className="flex-1">
                 <h3 className="font-bold text-base sm:text-lg text-gray-800">{item.title}</h3>
                 <p className="text-xs sm:text-sm text-gray-600">by {item.author}</p>
                 <p className="text-base sm:text-lg font-semibold text-red-600 mt-2">£{item.price.toFixed(2)}</p>
               </div>
               <div className="flex justify-between items-center mt-3 sm:mt-4">
-                <button
-                  className="bg-gray-800 text-white py-1 sm:py-2 px-3 sm:px-4 rounded-md text-sm sm:text-base hover:bg-black transition-colors"
-                >
+                <button className="bg-gray-800 text-white py-1 sm:py-2 px-3 sm:px-4 rounded-md text-sm sm:text-base hover:bg-black transition-colors">
                   Add to Cart
                 </button>
                 <button
@@ -71,9 +87,8 @@ const Wishlist = ({ wishlistItems, setWishlistItems }) => {
   );
 };
 
-// --- Main Wishlist Page Component ---
+// --- Main Page Component ---
 const MyWishlistPage = () => {
-  const [activeLink, setActiveLink] = useState('wishlist');
   const [wishlistItems, setWishlistItems] = useState(initialWishlistItems);
 
   useEffect(() => {
@@ -97,23 +112,25 @@ const MyWishlistPage = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-gray-50 font-sans flex-col lg:flex-row">
+    <div className="flex flex-col min-h-screen bg-gray-50 font-sans">
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
+        .fade-in-up {
+          animation: fadeInUp 0.6s ease-out forwards;
+          opacity: 0;
+        }
       `}</style>
 
-      <Sidebar activeLink={activeLink} setActiveLink={setActiveLink} />
+      <TopBar />
 
-      <div className="flex-1 flex flex-col lg:ml-64">
-        <TopBar />
-        <main className="flex-1 p-4 sm:p-8 overflow-y-auto pb-16 lg:pb-8">
-          <Wishlist wishlistItems={wishlistItems} setWishlistItems={setWishlistItems} />
-        </main>
-      </div>
+      <main className="flex-1 p-4 sm:p-8 overflow-y-auto pb-16">
+        <Wishlist wishlistItems={wishlistItems} setWishlistItems={setWishlistItems} />
+      </main>
+
+      <Footer /> {/* ✅ Footer at bottom */}
     </div>
   );
 };

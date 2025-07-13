@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import TopBar from '../components/Topbar';
-import Sidebar from '../components/Sidebar';
+import Footer from '../components/footer'; // Added Footer import
 
 // --- SVG ICONS ---
 const SearchIcon = (props) => (
@@ -594,7 +594,6 @@ const MainContent = () => {
 
 // --- OrdersPage Component ---
 const OrdersPage = () => {
-  const [activeLink, setActiveLink] = useState('orders');
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const location = useLocation();
   const { id } = useParams();
@@ -624,7 +623,7 @@ const OrdersPage = () => {
   }, [location.pathname, id]);
 
   return (
-    <div className="flex min-h-screen bg-gray-50 font-sans flex-col lg:flex-row">
+    <div className="flex min-h-screen bg-gray-50 font-sans flex-col">
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -633,13 +632,10 @@ const OrdersPage = () => {
         .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
       `}</style>
 
-      <Sidebar activeLink={activeLink} setActiveLink={setActiveLink} />
-
-      <div className="flex-1 flex flex-col lg:ml-64">
-        <TopBar />
-        {location.pathname.startsWith('/item/') ? <ItemDetails /> : <MainContent />}
-        <OrderDetailsSidebar isOpen={isDetailsOpen} onClose={() => setIsDetailsOpen(false)} />
-      </div>
+      <TopBar />
+      {location.pathname.startsWith('/item/') ? <ItemDetails /> : <MainContent />}
+      <OrderDetailsSidebar isOpen={isDetailsOpen} onClose={() => setIsDetailsOpen(false)} />
+      <Footer /> {/* Added Footer component */}
     </div>
   );
 };

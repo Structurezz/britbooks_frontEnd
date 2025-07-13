@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import TopBar from '../components/Topbar';
-import Sidebar from '../components/Sidebar';
+import Footer from '../components/footer'; // Added Footer import
 
 // --- SVG ICONS ---
 const TrashIcon = (props) => (
@@ -279,7 +279,6 @@ const Addresses = ({ addresses, setAddresses }) => {
 
 // --- Main Addresses Page Component ---
 const AddressesPage = () => {
-  const [activeLink, setActiveLink] = useState('addresses');
   const [addresses, setAddresses] = useState(initialAddresses);
 
   useEffect(() => {
@@ -303,7 +302,7 @@ const AddressesPage = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-gray-50 font-sans flex-col lg:flex-row">
+    <div className="flex min-h-screen bg-gray-50 font-sans flex-col">
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -312,14 +311,11 @@ const AddressesPage = () => {
         .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
       `}</style>
 
-      <Sidebar activeLink={activeLink} setActiveLink={setActiveLink} />
-
-      <div className="flex-1 flex flex-col lg:ml-64">
-        <TopBar />
-        <main className="flex-1 p-4 sm:p-8 overflow-y-auto pb-16 lg:pb-8">
-          <Addresses addresses={addresses} setAddresses={setAddresses} />
-        </main>
-      </div>
+      <TopBar />
+      <main className="flex-1 p-4 sm:p-8 overflow-y-auto pb-16 lg:pb-8">
+        <Addresses addresses={addresses} setAddresses={setAddresses} />
+      </main>
+      <Footer /> {/* Added Footer component */}
     </div>
   );
 };
