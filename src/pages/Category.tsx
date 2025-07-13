@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Footer from '../components/Footer';
+import Footer from '../components/footer';
 import TopBar from '../components/Topbar';
-import BrowseCategoryDetail from '../components/BrowseCategoryDetail';
+import BrowseCategoryDetail from '../components/browseCategoryDetails';
 
 const ChevronDownIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
