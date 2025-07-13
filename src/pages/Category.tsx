@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Star } from 'lucide-react';
-
 import Footer from '../components/footer';
 import TopBar from '../components/Topbar';
-import { books } from '../data/books'; // Make sure this path is correct
+import { books, books as realBooks } from '../data/books';
 
 // --- Reusable Components ---
 
@@ -22,35 +21,36 @@ const StarRating = ({ rating, starSize = 16 }) => (
   </div>
 );
 
-// New Book Card Component to match the design
+// Book Card Component
 const BookCard = ({ book }) => {
   return (
-    <div className="bg-white text-center border border-gray-200 group flex flex-col">
+    <div className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 group flex flex-col overflow-hidden">
       <div className="relative bg-gray-100 p-4 flex-shrink-0">
         <Link to={`/browse/${book.id}`} className="block">
           <img
             src={book.imageUrl}
             alt={book.title}
-            className="w-full h-64 object-cover mx-auto transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-64 object-cover mx-auto transition-transform duration-300 group-hover:scale-105 rounded-t-lg"
           />
         </Link>
-        <button
-          onClick={() => alert(`Showing quick view for ${book.title}`)}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 w-4/5 bg-black bg-opacity-75 text-white text-xs font-bold py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        >
-          QUICK VIEW
-        </button>
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+          <Link to={`/browse/${book.id}`}>
+            <button className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300 hover:bg-red-700">
+              QUICK VIEW
+            </button>
+          </Link>
+        </div>
       </div>
       <div className="p-4 flex flex-col flex-grow items-center">
-        <h4 className="font-semibold text-sm text-gray-800 h-10 leading-5 mb-1">{book.title}</h4>
+        <h4 className="font-semibold text-sm text-gray-800 h-12 leading-6 mb-2 line-clamp-2">{book.title}</h4>
         <p className="text-xs text-gray-500 mb-2">{book.author}</p>
         <div className="mb-2">
-            <StarRating rating={book.rating} />
+          <StarRating rating={book.rating} />
         </div>
-        <p className="text-lg font-bold text-gray-800 mt-auto mb-3">£{book.price.toFixed(2)}</p>
+        <p className="text-lg font-bold text-gray-900 mt-auto mb-3">£{book.price.toFixed(2)}</p>
         <button
           onClick={() => alert('Added to basket!')}
-          className="w-full bg-red-500 text-white font-bold py-2 hover:bg-red-600 transition-colors text-sm"
+          className="w-full bg-red-600 text-white font-medium py-2 rounded-md hover:bg-red-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
         >
           ADD TO BASKET
         </button>
@@ -59,18 +59,24 @@ const BookCard = ({ book }) => {
   );
 };
 
-// Rebuilt Filter Sidebar to match the design
+// Filter Sidebar with Campaign Ads
 const FilterSidebar = ({ filters, setFilters }) => {
   const priceRanges = [
-    { label: 'Less than £2.99', min: 0, max: 2.99 },
+    { label: 'Under £2.99', min: 0, max: 2.99 },
     { label: '£3.00 - £5.99', min: 3, max: 5.99 },
     { label: '£6.00 - £8.99', min: 6, max: 8.99 },
     { label: '£9.00 - £11.99', min: 9, max: 11.99 },
-    { label: '£12.00 - £14.99', min: 12, max: 14.99 },
+    { label: '£12.00+', min: 12, max: Infinity },
+  ];
+
+  const categories = [
+    'Fiction', 'Nonfiction', 'Children\'s Books', 'Mystery', 'Science Fiction',
+    'Fantasy', 'Romance', 'Biography', 'History', 'Self-Help', 'Thriller', 'Poetry'
   ];
 
   const filterOptions = useMemo(() => {
     const counts = {
+      category: {},
       coverType: {},
       condition: {},
       ageRange: {},
@@ -78,20 +84,19 @@ const FilterSidebar = ({ filters, setFilters }) => {
     };
 
     books.forEach(book => {
-      // @ts-ignore
+      counts.category[book.genre || 'Uncategorized'] = (counts.category[book.genre || 'Uncategorized'] || 0) + 1;
       counts.coverType[book.coverType] = (counts.coverType[book.coverType] || 0) + 1;
-      // @ts-ignore
       counts.condition[book.condition] = (counts.condition[book.condition] || 0) + 1;
-      // @ts-ignore
       counts.ageRange[book.ageRange] = (counts.ageRange[book.ageRange] || 0) + 1;
       
-      const priceIndex = priceRanges.findIndex(range => book.price >= range.min && book.price <= range.max);
+      const priceIndex = priceRanges.findIndex(range => book.price >= range.min && (book.price <= range.max || range.max === Infinity));
       if (priceIndex !== -1) {
         counts.price[priceIndex]++;
       }
     });
 
     return {
+      category: Object.fromEntries(categories.map(cat => [cat, counts.category[cat] || 0])),
       coverType: Object.entries(counts.coverType),
       condition: Object.entries(counts.condition),
       ageRange: Object.entries(counts.ageRange),
@@ -100,133 +105,253 @@ const FilterSidebar = ({ filters, setFilters }) => {
   }, []);
 
   const handleFilterClick = (filterType, value) => {
-     setFilters(prev => ({ ...prev, [filterType]: prev[filterType] === value ? null : value }));
+    setFilters(prev => ({ ...prev, [filterType]: prev[filterType] === value ? null : value }));
   };
     
   const handlePriceFilter = (range) => {
-      setFilters(prev => ({
-          ...prev,
-          priceMin: prev.priceMin === range.min ? null : range.min,
-          priceMax: prev.priceMax === range.max ? null : range.max,
-      }))
-  }
+    setFilters(prev => ({
+      ...prev,
+      priceMin: prev.priceMin === range.min ? null : range.min,
+      priceMax: prev.priceMax === range.max ? null : range.max,
+    }));
+  };
 
   const renderFilterSection = (title, options, filterKey) => (
     <div className="mb-6">
-      <h4 className="font-semibold mb-2 text-sm">{title}</h4>
-      <ul className="space-y-1 text-sm">
-        {options.map(([value, count]) => (
-          <li key={value}>
-            <button
-              onClick={() => handleFilterClick(filterKey, value)}
-              className={`hover:text-red-500 text-left w-full ${filters[filterKey] === value ? 'font-bold text-red-500' : ''}`}
-            >
+      <h4 className="font-medium text-gray-700 mb-2 text-sm uppercase tracking-wide">{title}</h4>
+      <ul className="space-y-2">
+        {Object.entries(options).map(([value, count]) => (
+          <li key={value} className="flex items-center">
+            <input
+              type="checkbox"
+              id={`${filterKey}-${value}`}
+              checked={filters[filterKey] === value}
+              onChange={() => handleFilterClick(filterKey, value)}
+              className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+            />
+            <label htmlFor={`${filterKey}-${value}`} className="ml-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer">
               {value} <span className="text-gray-400">({count})</span>
-            </button>
+            </label>
           </li>
         ))}
       </ul>
     </div>
   );
 
-  return (
-    <aside className="w-full lg:w-1/4 xl:w-1/5 pr-8">
-      <div className="bg-gray-50 p-6">
-        <h3 className="font-bold text-lg mb-4">Shopping Options</h3>
-        {renderFilterSection('Cover type', filterOptions.coverType, 'coverType')}
-        {renderFilterSection('Conditions', filterOptions.condition, 'condition')}
-        {renderFilterSection('Age Ranges', filterOptions.ageRange, 'ageRange')}
+  // Campaign Ads Data (Placeholder)
+  const campaignAds = [
+    {
+      id: 1,
+      title: "Summer Sale - 20% Off!",
+      description: "Get 20% off on all books this summer.",
+      image: "https://via.placeholder.com/250x100?text=Summer+Sale",
+      link: "/shop/summer-sale",
+    },
+    {
+      id: 2,
+      title: "New Arrivals",
+      description: "Check out the latest books added!",
+      image: "https://via.placeholder.com/250x100?text=New+Arrivals",
+      link: "/shop/new-arrivals",
+    },
+  ];
 
-        <div className="mb-6">
-          <h4 className="font-semibold mb-2 text-sm">Price range</h4>
-          <ul className="space-y-1 text-sm">
-            {filterOptions.price.map(range => (
-                <li key={range.label}>
-                    <button onClick={() => handlePriceFilter(range)} className={`hover:text-red-500 text-left w-full ${filters.priceMin === range.min ? 'font-bold text-red-500' : ''}`}>
-                       {range.label} <span className="text-gray-400">({range.count})</span>
-                    </button>
+  return (
+    <aside className="w-full lg:w-1/4 xl:w-1/5 pr-6">
+      <div className="bg-gradient-to-br from-gray-50 to-white p-6 rounded-xl shadow-lg overflow-y-auto max-h-[calc(100vh-200px)]">
+        <h3 className="font-bold text-xl text-gray-900 mb-6 border-b-2 border-red-100 pb-2">Filters & Offers</h3>
+
+        {/* Filters Section */}
+        <div className="mb-8">
+          {renderFilterSection('Categories', filterOptions.category, 'category')}
+          {renderFilterSection('Cover Type', filterOptions.coverType, 'coverType')}
+          {renderFilterSection('Condition', filterOptions.condition, 'condition')}
+          {renderFilterSection('Age Range', filterOptions.ageRange, 'ageRange')}
+          <div className="mb-6">
+            <h4 className="font-medium text-gray-700 mb-2 text-sm uppercase tracking-wide">Price Range</h4>
+            <ul className="space-y-2">
+              {filterOptions.price.map(range => (
+                <li key={range.label} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`price-${range.label}`}
+                    checked={filters.priceMin === range.min && filters.priceMax === range.max}
+                    onChange={() => handlePriceFilter(range)}
+                    className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor={`price-${range.label}`} className="ml-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer">
+                    {range.label} <span className="text-gray-400">({range.count})</span>
+                  </label>
                 </li>
-            ))}
-          </ul>
+              ))}
+            </ul>
+          </div>
+          <button
+            onClick={() => setFilters({})}
+            className="w-full bg-red-600 text-white font-medium py-2 rounded-md hover:bg-red-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-red-500 mt-2"
+          >
+            Clear Filters
+          </button>
         </div>
-        
-        <button onClick={() => setFilters({})} className="mt-4 w-full bg-gray-200 text-gray-700 font-bold py-2 hover:bg-gray-300 text-xs">
-          CLEAR FILTERS
-        </button>
+
+        {/* Campaign Ads Section */}
+        <div className="mt-8">
+          <h4 className="font-bold text-lg text-gray-900 mb-4">Special Offers</h4>
+          {campaignAds.map(ad => (
+            <div
+              key={ad.id}
+              className="mb-4 bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
+            >
+              <img src={ad.image} alt={ad.title} className="w-full h-24 object-cover" />
+              <div className="p-3">
+                <h5 className="font-semibold text-gray-800 text-sm">{ad.title}</h5>
+                <p className="text-xs text-gray-600">{ad.description}</p>
+                <Link to={ad.link} className="text-red-600 text-xs font-medium hover:underline mt-1 inline-block">Shop Now</Link>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </aside>
   );
 };
 
-
-// --- MAIN PAGE CONTENT --- //
+// --- Main Page Content ---
 const CategoryMainContent = () => {
   const [filters, setFilters] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12; // Modern default, adjustable
 
   const filteredBooks = useMemo(() => {
     return books.filter(book => {
-        // @ts-ignore
+      if (filters.category && book.genre !== filters.category) return false;
       if (filters.coverType && book.coverType !== filters.coverType) return false;
-        // @ts-ignore
       if (filters.condition && book.condition !== filters.condition) return false;
-        // @ts-ignore
       if (filters.ageRange && book.ageRange !== filters.ageRange) return false;
-        // @ts-ignore
       if (filters.priceMin != null && book.price < filters.priceMin) return false;
-        // @ts-ignore
-      if (filters.priceMax != null && book.price > filters.priceMax) return false;
+      if (filters.priceMax != null && (book.price > filters.priceMax || (filters.priceMax === Infinity && book.price < filters.priceMin))) return false;
       return true;
     });
   }, [filters]);
 
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentBooks = filteredBooks.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) setCurrentPage(page);
+  };
+
+  const visiblePages = useMemo(() => {
+    const pages = [];
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }, [currentPage, totalPages]);
+
   return (
     <div className="container mx-auto px-4 sm:px-8 py-8">
-      <div className="flex flex-col lg:flex-row">
+      <div className="flex flex-col lg:flex-row gap-6">
         <FilterSidebar filters={filters} setFilters={setFilters} />
         
-        <div className="w-full lg:w-3/4 xl:w-4/5 mt-8 lg:mt-0">
-          <div className="flex flex-wrap justify-between items-center border-t border-b py-2 mb-6 gap-4">
-            <div className="flex items-center space-x-2 text-sm">
-              <label htmlFor="sort-by" className="font-semibold">Short By:</label>
-              <select id="sort-by" className="border-gray-300 rounded-sm py-1 pl-1 pr-6 focus:ring-0 focus:border-gray-400 text-sm">
-                <option>Name</option>
-                <option>Price</option>
+        <div className="w-full lg:w-3/4">
+          <div className="flex flex-wrap justify-between items-center border-b border-gray-200 py-3 mb-6">
+            <div className="flex items-center space-x-3">
+              <label htmlFor="sort-by" className="font-medium text-gray-700">Sort By:</label>
+              <select
+                id="sort-by"
+                className="border border-gray-300 rounded-md py-1.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                <option value="name">Name</option>
+                <option value="price">Price</option>
               </select>
             </div>
             <div className="text-sm text-gray-500">
-              1-{Math.min(20, filteredBooks.length)} of {filteredBooks.length}
+              {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredBooks.length)} of {filteredBooks.length}
             </div>
-            <div className="flex items-center space-x-2 text-sm">
-              <label htmlFor="show" className="font-semibold">Show:</label>
-              <select id="show" className="border-gray-300 rounded-sm py-1 pl-1 pr-6 focus:ring-0 focus:border-gray-400 text-sm">
-                <option>20</option>
-                <option>40</option>
+            <div className="flex items-center space-x-3">
+              <label htmlFor="show" className="font-medium text-gray-700">Show:</label>
+              <select
+                id="show"
+                className="border border-gray-300 rounded-md py-1.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                onChange={(e) => {
+                  const newItemsPerPage = parseInt(e.target.value);
+                  setItemsPerPage(newItemsPerPage);
+                  setCurrentPage(1);
+                }}
+              >
+                <option value="12">12</option>
+                <option value="24">24</option>
+                <option value="48">48</option>
               </select>
-            </div>
-             <div className="flex items-center space-x-1 text-sm">
-              <span className="font-bold">1</span>
-              <button className="text-gray-600 hover:text-black">2</button>
-              <button className="text-gray-600 hover:text-black">3</button>
-              <button className="text-gray-600 hover:text-black">{'>'}</button>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredBooks.map(book => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {currentBooks.map(book => (
               <BookCard key={book.id} book={book} />
             ))}
           </div>
+          {currentBooks.length === 0 && (
+            <p className="text-center text-gray-500 py-6">No books match your filters.</p>
+          )}
+
+          {filteredBooks.length > itemsPerPage && (
+            <div className="mt-6 flex justify-center items-center space-x-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              {visiblePages.map(page => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-4 py-2 rounded-md ${currentPage === page ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition-colors`}
+                >
+                  {page}
+                </button>
+              ))}
+              {totalPages > visiblePages[visiblePages.length - 1] && (
+                <span className="text-gray-500">...</span>
+              )}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors ml-2"
+              >
+                Load More
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-
-// --- MAIN PAGE COMPONENT --- //
+// --- Main Page Component ---
 const CategoryBrowsePage = () => {
   return (
-    <div className="bg-white">
+    <div className="bg-gray-50 min-h-screen">
       <TopBar />
       <CategoryMainContent />
       <Footer />

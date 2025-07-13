@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import Footer from '../components/footer';
@@ -17,15 +17,11 @@ const formattedRealBooks = realBooks.map(book => ({
 // Only use real books
 const bookData = formattedRealBooks;
 
-
-
-
-
 // --- Reusable Components ---
 
 // Book Card Component for the shelves
 const BookCard = ({ id, img, title, author, price }) => (
-  <div className="relative group flex-shrink-0 w-[180px] text-center border border-gray-200 rounded-lg p-3 transition-shadow hover:shadow-lg">
+  <div className="relative group flex-shrink-0 w-full max-w-[180px] text-center border border-gray-200 rounded-lg p-3 transition-shadow hover:shadow-lg">
     <img src={img} alt={title} className="w-full h-60 object-cover mb-3 rounded" />
     <h3 className="font-semibold text-sm truncate">{title}</h3>
     <p className="text-gray-500 text-xs mb-2">{author}</p>
@@ -48,43 +44,59 @@ const BookCard = ({ id, img, title, author, price }) => (
   </div>
 );
 
+// Updated Book Shelf Component with Vertical Grid and Pagination
+const BookShelf = ({ title, books: allBooks }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8; // Adjustable based on design
 
-// Updated Horizontal Book Shelf Component
-const BookShelf = ({ title, books }) => {
-  const scrollRef = useRef(null);
+  const paginatedBooks = useMemo(() => {
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    return allBooks.slice(indexOfFirstItem, indexOfLastItem);
+  }, [allBooks, currentPage]);
 
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      const { scrollLeft, clientWidth } = scrollRef.current;
-      const scrollAmount = clientWidth * 0.5; 
-      const scrollTo = direction === 'left' ? scrollLeft - scrollAmount : scrollLeft + scrollAmount;
-      scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
+  const totalPages = Math.ceil(allBooks.length / itemsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
     }
   };
 
   return (
-    <section className="py-8">
+    <section className="py-8 animate-on-scroll">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-blue-800">{title}</h2>
         <div className="flex space-x-2">
-          <button onClick={() => scroll('left')} className="p-1 border rounded-md hover:bg-gray-100 text-gray-500">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            className="p-1 border rounded-md hover:bg-gray-100 text-gray-500 disabled:text-gray-300"
+            disabled={currentPage === 1}
+          >
             <ChevronLeft size={20} />
           </button>
-          <button onClick={() => scroll('right')} className="p-1 border rounded-md hover:bg-gray-100 text-gray-500">
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            className="p-1 border rounded-md hover:bg-gray-100 text-gray-500 disabled:text-gray-300"
+            disabled={currentPage === totalPages}
+          >
             <ChevronRight size={20} />
           </button>
         </div>
       </div>
-      <div ref={scrollRef} className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide">
-        {books.map((book, index) => (
-          <BookCard key={index} {...book} />
-        ))}
+      <div className="max-h-[480px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {paginatedBooks.map((book, index) => (
+            <BookCard key={index} {...book} />
+          ))}
+        </div>
       </div>
+      {paginatedBooks.length === 0 && (
+        <p className="text-center text-gray-500 py-4">No books available.</p>
+      )}
     </section>
   );
 };
-
-
 
 // --- Main Homepage Component ---
 
@@ -109,9 +121,7 @@ const Homepage = () => {
     };
   }, []);
 
-  // --- Mock Data ---
-
-  
+  // Mock Data
   const popularBooks = [...bookData].reverse();
   const bestSellers = bookData.slice(2, 8);
   const childrensBooks = bookData.slice(3, 9);
@@ -180,41 +190,31 @@ const Homepage = () => {
 
           {/* Welcome Section */}
           <div className="max-w-7xl mx-auto py-16 px-4 md:px-8 flex flex-col md:flex-row items-center md:items-start gap-10 md:gap-16">
-  {/* Left Image */}
-  <div className="md:w-1/2 flex justify-center md:justify-start">
-  <img
-    src="https://media.istockphoto.com/id/185266132/photo/portrait-of-a-cute-teenage-girl.jpg?s=612x612&w=0&k=20&c=7oyxKo75xTGO_k5v2zsCBeu7GWG-7eryUyyu42o8Ra0="
-    alt="Woman Reading"
-    className="w-full max-w-lg object-contain"
-  />
-</div>
+            <div className="md:w-1/2 flex justify-center md:justify-start">
+              <img
+                src="https://media.istockphoto.com/id/185266132/photo/portrait-of-a-cute-teenage-girl.jpg?s=612x612&w=0&k=20&c=7oyxKo75xTGO_k5v2zsCBeu7GWG-7eryUyyu42o8Ra0="
+                alt="Woman Reading"
+                className="w-full max-w-lg object-contain"
+              />
+            </div>
+            <div className="md:w-1/2">
+              <h2 className="text-4xl md:text-5xl font-light leading-tight mb-6">
+                Welcome to <span className="font-bold text-blue-900">brit</span>
+                <span className="font-bold text-red-600">books</span>
+                <br />
+                <span className="font-bold text-gray-900">online books</span> super store
+              </h2>
+              <p className="text-gray-700 text-lg leading-relaxed">
+                the UK’s most trusted platform for high-quality secondhand books. Our mission is simple: to make reading more affordable, sustainable, and accessible to everyone. 
+                Whether you’re a curious student hunting for academic texts, a parent looking for bedtime stories, or an avid reader building your personal library, we’ve got shelves filled just for you.
+              </p>
+            </div>
+          </div>
 
-
-  {/* Right Text Block */}
-  <div className="md:w-1/2">
-    <h2 className="text-4xl md:text-5xl font-light leading-tight mb-6">
-      Welcome to <span className="font-bold text-blue-900">brit</span>
-      <span className="font-bold text-red-600">books</span>
-      <br />
-      <span className="font-bold text-gray-900">online books</span> super store
-    </h2>
-    <p className="text-gray-700 text-lg leading-relaxed">
-    the UK’s most trusted platform for high-quality secondhand books. Our mission is simple: to make reading more affordable, sustainable, and accessible to everyone. 
-  Whether you’re a curious student hunting for academic texts, a parent looking for bedtime stories, or an avid reader building your personal library, we’ve got shelves filled just for you.
-  <br /><br />
-  
-</p>
-  </div>
-</div>
-
-
-<div className="w-full mx-auto px-4 md:px-8">
-
+          <div className="w-full mx-auto px-4 md:px-8">
             {/* Book Shelves */}
             <BookShelf title="New Arrivals" books={bookData} />
             <BookShelf title="Popular Books" books={popularBooks} />
-
-            {/* Top Banner Section - Moved Here */}
             <div className="py-12 grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 { title: "Top 10 Best Sellers", image: "https://cdn-icons-png.flaticon.com/512/2331/2331970.png" },
@@ -242,8 +242,6 @@ const Homepage = () => {
                 </div>
               ))}
             </div>
-
-            {/* Remaining Book Shelves */}
             <BookShelf title="Best Sellers" books={bestSellers} />
             <BookShelf title="Children's Books" books={childrensBooks} />
             <BookShelf title="Clearance Items" books={clearanceItems} />
