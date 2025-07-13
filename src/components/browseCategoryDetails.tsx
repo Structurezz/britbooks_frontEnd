@@ -95,7 +95,7 @@ const BrowseCategoryDetail = () => {
       <main className="container mx-auto px-4 sm:px-8 py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <div className="relative">
-            <img src={book.imageUrl} alt={`Cover of ${book.title}`} className="w-full h-auto object-contain border rounded-lg shadow-sm" />
+            <img src={book.imageUrl} alt={`Cover of ${book.title}`} className="w-full h-90 object-contain border rounded-lg shadow-sm" />
             <div className="absolute top-2 left-2 bg-yellow-300 text-gray-800 text-xs font-bold p-2 rounded transform -rotate-3">
               COMPLETELY UPDATED!
             </div>

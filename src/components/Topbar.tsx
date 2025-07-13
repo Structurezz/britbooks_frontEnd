@@ -50,7 +50,7 @@ const TopBar = () => {
       {/* Top Bar */}
       <div className="bg-indigo-900 text-white px-4 py-1">
         <div className="container mx-auto flex justify-between items-center text-xs">
-          <span>{user ? `Welcome back, ${user.fullName}!` : 'Default welcome msg!'}</span>
+          <span>{user ? `Welcome back, ${user.fullName}!` : 'sign in to explore more!'}</span>
           <nav className="flex space-x-4 md:space-x-6">
             {user ? (
               <>
@@ -69,33 +69,31 @@ const TopBar = () => {
       </div>
 
       {/* Main header */}
-      <div className="bg-white px-4 py-3 sm:py-4">
-        <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-          {/* Logo and Mobile Menu Button */}
-          <div className="flex items-center justify-between w-full sm:w-auto">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="bg-blue-800 p-2 relative">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10.392C2.057 15.71 3.245 16 4.5 16c1.255 0 2.443-.29 3.5-.804V4.804zM14.5 4c-1.255 0-2.443.29-3.5.804v10.392c1.057.514 2.245.804 3.5.804s2.443-.29 3.5-.804V4.804C16.943 4.29 15.755 4 14.5 4z" />
-                </svg>
-                <div className="absolute top-1 right-1 w-4 h-2 bg-red-600">
-                  <div className="absolute w-full h-0.5 bg-white top-1/2 -translate-y-1/2"></div>
-                  <div className="absolute h-full w-0.5 bg-white left-1/2 -translate-x-1/2"></div>
-                </div>
-              </div>
-              <span className="text-2xl sm:text-3xl font-bold text-gray-800">britbooks</span>
+      <div className="bg-white px-1 py-1">
+        <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center relative">
+          
+          {/* --- ADJUSTED LOGO CODE STARTS HERE --- */}
+
+          {/* Logo Container: Increased height and removed 'overflow-hidden' */}
+          <div className="absolute top-0 left-0 h-36 sm:h-40 z-10">
+            <Link to="/" className="block w-auto h-full">
+              <img
+                src="/logobrit.png"
+                alt="BritBooks Logo"
+                /* Logo Image: Increased height to fill the new container size */
+                className="h-full w-auto object-contain"
+              />
             </Link>
-            <button
-              onClick={toggleMobileMenu}
-              className="sm:hidden text-gray-600 hover:text-gray-800 p-2"
-              aria-label="Toggle menu"
-            >
-              {isMobileMenuOpen ? <XIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
-            </button>
           </div>
+          
+          {/* --- ADJUSTED LOGO CODE ENDS HERE --- */}
+
+
+          {/* Spacer to prevent overlap with logo */}
+          <div className="h-24 w-48 sm:w-64 flex-shrink-0"></div>
 
           {/* Search */}
-          <div className="w-full sm:max-w-lg mx-0 sm:mx-4 mt-4 sm:mt-0">
+          <div className="w-full sm:max-w-lg mx-0 sm:mx-4 mt-2 sm:mt-0">
             <div className="relative">
               <input
                 type="text"
@@ -109,7 +107,7 @@ const TopBar = () => {
           </div>
 
           {/* Phone Number */}
-          <div className="text-red-600 font-bold text-lg mt-4 sm:mt-0">
+          <div className="text-red-600 font-bold text-lg mt-2 sm:mt-0">
             📞 01234 567890
           </div>
         </div>
@@ -117,9 +115,12 @@ const TopBar = () => {
 
       {/* Bottom nav */}
       <div className="bg-white border-t border-gray-200 px-4">
-        <div className="container mx-auto">
+        <div className="container mx-auto flex flex-col sm:flex-row sm:items-center h-12 sm:h-16">
+          {/* Spacer to align with logo above */}
+          <div className="h-12 sm:h-16 w-48 sm:w-64 flex-shrink-0"></div>
+
           {/* Desktop Navigation */}
-          <nav className="hidden sm:flex justify-between items-center font-medium text-gray-600 ml-10 md:ml-40 lg:ml-60">
+          <nav className="hidden sm:flex flex-1 justify-between items-center font-medium text-gray-600">
             <div className="flex space-x-8">
               <Link
                 to="/"
@@ -133,6 +134,7 @@ const TopBar = () => {
               >
                 Shop by Category
               </Link>
+           
               <Link
                 to="/popular-books"
                 className={`py-3 ${isActive('/popular') ? 'text-red-600 border-b-2 border-red-600' : 'hover:text-red-600'}`}
@@ -173,63 +175,9 @@ const TopBar = () => {
           {/* Mobile Navigation */}
           <div className={`sm:hidden ${isMobileMenuOpen ? 'block' : 'hidden'}`}>
             <nav className="flex flex-col space-y-4 py-4">
-              <Link
-                to="/"
-                className={`py-2 ${isActive('/') ? 'text-red-600 font-bold' : 'text-gray-600 hover:text-red-600'}`}
-                onClick={toggleMobileMenu}
-              >
-                Home
-              </Link>
-              <Link
-                to="/category"
-                className={`py-2 ${isActive('/category') ? 'text-red-600 font-bold' : 'text-gray-600 hover:text-red-600'}`}
-                onClick={toggleMobileMenu}
-              >
-                Shop by Category
-              </Link>
-              <Link
-                to="/popular-books"
-                className={`py-2 ${isActive('/popular') ? 'text-red-600 font-bold' : 'text-gray-600 hover:text-red-600'}`}
-                onClick={toggleMobileMenu}
-              >
-                Popular Books
-              </Link>
-              <Link
-                to="/new-arrivals"
-                className={`py-2 ${isActive('/new') ? 'text-red-600 font-bold' : 'text-gray-600 hover:text-red-600'}`}
-                onClick={toggleMobileMenu}
-              >
-                New Arrivals
-              </Link>
-              <Link
-                to="/bestsellers"
-                className={`py-2 ${isActive('/bestsellers') ? 'text-red-600 font-bold' : 'text-gray-600 hover:text-red-600'}`}
-                onClick={toggleMobileMenu}
-              >
-                Best Sellers
-              </Link>
-              <Link
-                to="/clearance"
-                className={`py-2 ${isActive('/clearance') ? 'text-red-600 font-bold' : 'text-gray-600 hover:text-red-600'}`}
-                onClick={toggleMobileMenu}
-              >
-                Clearance
-              </Link>
-              <Link
-                to="/help"
-                className={`py-2 ${isActive('/contact') ? 'text-red-600 font-bold' : 'text-gray-600 hover:text-red-600'}`}
-                onClick={toggleMobileMenu}
-              >
-                Contact Us
-              </Link>
-              <Link
-                to="/checkout"
-                className="py-2 flex items-center space-x-2 text-gray-600 hover:text-red-600"
-                onClick={toggleMobileMenu}
-              >
-                <ShoppingCartIcon className="h-6 w-6 text-gray-600" />
-                <span>Cart 0 Items</span>
-              </Link>
+                {/* Mobile Links */}
+                <Link to="/" onClick={toggleMobileMenu}>Home</Link>
+                <Link to="/category" onClick={toggleMobileMenu}>Shop by Category</Link>
             </nav>
           </div>
         </div>

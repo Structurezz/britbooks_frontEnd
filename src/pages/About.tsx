@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import Footer from '../components/footer';
 import { Menu, X } from 'lucide-react';
+import Topbar from '../components/topbar';
 
 const AboutUs = () => {
   useEffect(() => {
@@ -66,70 +67,7 @@ const AboutUs = () => {
         }
       `}</style>
       <div className="bg-white">
-      <header className="h-auto sm:h-20 px-4 sm:px-8 border-b sticky top-0 bg-white z-20 flex items-center">
-  <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 py-4 sm:py-0 relative w-full">
-    
-    <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 w-full sm:w-auto">
-      <div className="flex justify-between w-full sm:w-auto items-center">
-        <Link to="/">
-          <div className="flex items-center justify-center space-x-2">
-            <div className="bg-red-600 text-white font-bold text-2xl w-12 h-12 flex items-center justify-center rounded-md">B</div>
-            <span className="text-2xl sm:text-3xl font-bold">BritBooks</span>
-          </div>
-        </Link>
-
-        {/* Hamburger button - only on mobile */}
-        <button
-          className="sm:hidden p-2"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
-      </div>
-
-      <div className="relative w-full sm:w-64">
-        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </span>
-        <input
-          type="text"
-          placeholder="Search books, authors, or genres..."
-          className="pl-10 pr-4 py-2 border rounded-full w-full"
-        />
-      </div>
-    </div>
-
-    {/* DESKTOP NAV */}
-    <div className="hidden sm:flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-      <Link to="/explore" className="text-gray-600 header-btn text-center sm:text-left">Explore</Link>
-      <Link to="/login" className="text-gray-600 header-btn text-center sm:text-left">Login</Link>
-      <Link to="/signup" className="bg-red-600 text-white px-6 py-2 rounded-md font-semibold btn-hover-effect text-center sm:text-left w-full sm:w-auto">Sign Up</Link>
-    </div>
-  </div>
-
-  {/* MOBILE MENU */}
-  {menuOpen && (
-    <div className="sm:hidden w-full border-t">
-      <div className="flex flex-col space-y-2 py-4">
-        <Link to="/explore" className="text-gray-600 text-center" onClick={() => setMenuOpen(false)}>Explore</Link>
-        <Link to="/login" className="text-gray-600 text-center" onClick={() => setMenuOpen(false)}>Login</Link>
-        <Link to="/signup" className="bg-red-600 text-white px-6 py-2 rounded-md font-semibold text-center w-full" onClick={() => setMenuOpen(false)}>Sign Up</Link>
-      </div>
-    </div>
-  )}
-</header>
-
+        <Topbar />
         <main className="container mx-auto mt-8 px-8">
           {/* Hero Section */}
           <section className="relative text-white py-20 px-12 rounded-lg overflow-hidden">

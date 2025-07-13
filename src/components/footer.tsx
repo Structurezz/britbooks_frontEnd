@@ -43,14 +43,20 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Column 1: About */}
           <div>
-            <Link to="/" className="flex items-center gap-2 text-xl font-bold mb-4">
-              <span role="img" aria-label="book">📖</span>
-              <span>britbooks</span>
-            </Link>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna
-            </p>
-          </div>
+          <Link to="/" className="flex items-center gap-2 text-xl font-bold mb-1 -mt-6 -ml-6">
+          <img
+  src="/logobrit3.png"
+  alt="BritBooks Logo"
+  className="h-20 w-auto object-contain"
+/>
+  </Link>
+  <p className="text-gray-400 text-sm leading-relaxed -ml-4">
+  BritBooks is your trusted destination for quality used books at unbeatable prices. Explore our vast collection, discover hidden gems, and enjoy fast delivery.
+  <Link to="/about" className="text-blue-500 hover:underline ml-1">Learn more →</Link>
+</p>
+
+</div>
+
 
           {/* Column 2: Customer Support */}
           <div>
