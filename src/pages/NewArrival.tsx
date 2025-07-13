@@ -255,7 +255,7 @@ const NewArrivalsPage = () => {
               ))}
             </div>
             <div className="text-center mt-16 animate-on-scroll">
-              <Link to="/explore" className="bg-gray-800 text-white px-8 py-3 rounded-md font-semibold text-center hover:bg-black transition-colors flex items-center justify-center mx-auto space-x-2">
+              <Link to="/category" className="bg-gray-800 text-white px-8 py-3 rounded-md font-semibold text-center hover:bg-black transition-colors flex items-center justify-center mx-auto space-x-2">
                 <BookIcon className="h-5 w-5" />
                 <span>Browse All Books</span>
               </Link>

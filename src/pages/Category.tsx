@@ -144,15 +144,16 @@ const FilterSidebar = ({ filters, setFilters }) => {
       id: 1,
       title: "Summer Sale - 20% Off!",
       description: "Get 20% off on all books this summer.",
-      image: "https://via.placeholder.com/250x100?text=Summer+Sale",
-      link: "/shop/summer-sale",
+      video: "https://media.istockphoto.com/id/1124580988/video/sale-discount-animation.mp4?s=mp4-640x640-is&k=20&c=2zkbq3ujo3KveLEviCLhbTiIH9C7fAaCpABvuZvHoek=", // Replace with your real video
+      link: "/special-offers",
     },
+    
     {
       id: 2,
       title: "New Arrivals",
       description: "Check out the latest books added!",
-      image: "https://via.placeholder.com/250x100?text=New+Arrivals",
-      link: "/shop/new-arrivals",
+      image: "https://media.istockphoto.com/id/1351440387/fr/vectoriel/m%C3%A9gaphone-avec-banni%C3%A8re-de-bulle-vocale-whats-new-haut-parleur-label-pour-les-affaires-le.jpg?s=612x612&w=0&k=20&c=urnToNM6GlNy8rDyHl8-7uNFWKBzQs16uSxteDXvhi4=",
+      link: "/new-arrivals",
     },
   ];
 
@@ -196,21 +197,41 @@ const FilterSidebar = ({ filters, setFilters }) => {
 
         {/* Campaign Ads Section */}
         <div className="mt-8">
-          <h4 className="font-bold text-lg text-gray-900 mb-4">Special Offers</h4>
-          {campaignAds.map(ad => (
-            <div
-              key={ad.id}
-              className="mb-4 bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
-            >
-              <img src={ad.image} alt={ad.title} className="w-full h-24 object-cover" />
-              <div className="p-3">
-                <h5 className="font-semibold text-gray-800 text-sm">{ad.title}</h5>
-                <p className="text-xs text-gray-600">{ad.description}</p>
-                <Link to={ad.link} className="text-red-600 text-xs font-medium hover:underline mt-1 inline-block">Shop Now</Link>
-              </div>
-            </div>
-          ))}
-        </div>
+  <h4 className="font-bold text-lg text-gray-900 mb-4">Special Offers</h4>
+  {campaignAds.map(ad => (
+    <div
+      key={ad.id}
+      className="mb-4 bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
+    >
+      {ad.video ? (
+        <video
+          className="w-full h-24 object-cover"
+          autoPlay
+          loop
+          muted
+          playsInline
+        >
+          <source src={ad.video} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      ) : (
+        <img
+          src={ad.image}
+          alt={ad.title}
+          className="w-full h-24 object-cover"
+        />
+      )}
+      <div className="p-3">
+        <h5 className="font-semibold text-gray-800 text-sm">{ad.title}</h5>
+        <p className="text-xs text-gray-600">{ad.description}</p>
+        <Link to={ad.link} className="text-red-600 text-xs font-medium hover:underline mt-1 inline-block">
+          Shop Now
+        </Link>
+      </div>
+    </div>
+  ))}
+</div>
+
       </div>
     </aside>
   );
