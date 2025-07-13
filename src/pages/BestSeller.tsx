@@ -1,146 +1,252 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import Footer from '../components/footer';
-import TopBar from '../components/Topbar'; // Added TopBar import
-import { Menu, X } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
+import Footer from "../components/footer";
+import TopBar from "../components/Topbar";
+import { Menu, X, SearchIcon, UserCircleIcon, ShoppingCartIcon } from "lucide-react";
 
 // --- SVG ICONS ---
 const StarIcon = (props) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-    </svg>
-);
-
-const SearchIcon = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
-const UserCircleIcon = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5.52 19c.64-2.2 1.84-3 3.22-3h6.52c1.38 0 2.58.8 3.22 3"/><circle cx="12" cy="10" r="3"/><circle cx="12" cy="12" r="10"/></svg>;
-const ShoppingCartIcon = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>;
-const TwitterIcon = (props) => (
-  <svg {...props} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M23.643 4.937c-.835.37-1.732.62-2.675.733.962-.576 1.7-1.49 2.048-2.578-.9.534-1.897.922-2.958 1.13-.85-.904-2.06-1.47-3.4-1.47-2.572 0-4.658 2.086-4.658 4.66 0 .364.042.718.12 1.06-3.873-.195-7.304-2.05-9.602-4.868-.4.69-.63 1.49-.63 2.342 0 1.616.823 3.043 2.072 3.878-.764-.025-1.482-.234-2.11-.583v.06c0 2.257 1.605 4.14 3.737 4.568-.39.106-.803.163-1.227.163-.3 0-.593-.028-.877-.082.593 1.85 2.313 3.198 4.352 3.234-1.595 1.25-3.604 1.995-5.786 1.995-.376 0-.747-.022-1.112-.065 2.062 1.323 4.51 2.093 7.14 2.093 8.57 0 13.255-7.098 13.255-13.254 0-.2-.005-.402-.014-.602.91-.658 1.7-1.477 2.323-2.41z"></path>
-  </svg>
-);
-const FacebookIcon = (props) => (
-  <svg {...props} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"></path>
-  </svg>
-);
-const InstagramIcon = (props) => (
-  <svg {...props} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.012 3.584-.07 4.85c-.148 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.584-.012-4.85-.07c-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.85s.012-3.584.07-4.85c.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.85-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072s3.667-.014 4.947-.072c4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.196-4.358-2.617-6.78-6.979-6.98-1.281-.059-1.689-.073-4.948-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.79 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path>
+  <svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    stroke="currentColor"
+    strokeWidth="1"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
   </svg>
 );
 
-// --- MOCK DATA ---
-const bestsellers = [
-    { rank: 1, title: 'The Lincoln Highway', author: 'Amor Towles', price: 18.99, imageUrl: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1618525433l/57109339.jpg' },
-    { rank: 2, title: 'Cloud Cuckoo Land', author: 'Anthony Doerr', price: 15.50, imageUrl: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1618224971l/56783258.jpg' },
-    { rank: 3, title: 'The Maid', author: 'Nita Prose', price: 22.00, imageUrl: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1629302247l/55196813.jpg' },
-    { rank: 4, title: 'Sea of Tranquility', author: 'Emily St. John Mandel', price: 24.99, imageUrl: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1631633539l/58011116.jpg' },
-    { rank: 5, title: 'The Paris Apartment', author: 'Lucy Fokley', price: 14.99, imageUrl: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1635529452l/58468993.jpg' },
+// --- MOCK DATA (Expanded to 100 books) ---
+const baseBestsellers = [
+  { id: 1, rank: 1, title: "The Lincoln Highway", author: "Amor Towles", price: 18.99, imageUrl: "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1618525433l/57109339.jpg", rating: 4.2 },
+  { id: 2, rank: 2, title: "Cloud Cuckoo Land", author: "Anthony Doerr", price: 15.50, imageUrl: "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1618224971l/56783258.jpg", rating: 4.5 },
+  { id: 3, rank: 3, title: "The Maid", author: "Nita Prose", price: 22.00, imageUrl: "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1629302247l/55196813.jpg", rating: 4.3 },
+  { id: 4, rank: 4, title: "Sea of Tranquility", author: "Emily St. John Mandel", price: 24.99, imageUrl: "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1631633539l/58011116.jpg", rating: 4.6 },
+  { id: 5, rank: 5, title: "The Paris Apartment", author: "Lucy Foley", price: 14.99, imageUrl: "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1635529452l/58468993.jpg", rating: 4.4 },
 ];
+
+// Generate 100 books by duplicating and modifying base data
+const generateBestsellers = () => {
+  const books = [];
+  for (let i = 0; i < 20; i++) {
+    baseBestsellers.forEach((book, index) => {
+      books.push({
+        id: i * 5 + index + 1,
+        rank: i * 5 + index + 1,
+        title: `${book.title} ${i + 1}`,
+        author: book.author,
+        price: book.price + (i * 0.5),
+        imageUrl: book.imageUrl,
+        rating: book.rating + (i * 0.1 % 1),
+      });
+    });
+  }
+  return books.slice(0, 100); // Ensure exactly 100 books
+};
+
+const bestsellers = generateBestsellers();
 
 // --- Main Bestsellers Page Component ---
 const BestsellersPage = () => {
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('fade-in-up');
-                    }
-                });
-            },
-            { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
-        );
+  const [cart, setCart] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12; // Adjustable items per page
 
-        const elements = document.querySelectorAll('.animate-on-scroll');
-        elements.forEach((el) => observer.observe(el));
-
-        return () => {
-            elements.forEach((el) => observer.unobserve(el));
-        };
-    }, []);
-
-    return (
-        <div className="bg-white font-sans">
-            <style>{`
-                @keyframes fadeInUp {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
-                .hero-section {
-                    background-image: url('https://media.istockphoto.com/id/1406158110/video/mixed-race-students-communicate-in-a-library-young-black-man-and-white-woman-talking-in.mp4?s=mp4-640x640-is&k=20&c=feR9Asgw4gOkjbphFGCmZMLD1EJNZ8I-jkHDQz34mKI=');
-                    background-size: cover;
-                    background-position: center;
-                    background-repeat: no-repeat;
-                    position: relative;
-                }
-                .hero-section::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.5);
-                    z-index: 1;
-                }
-                .hero-section > * {
-                    position: relative;
-                    z-index: 2;
-                }
-            `}</style>
-            
-            <TopBar /> {/* Added TopBar component */}
-
-            <main>
-                {/* Hero Section */}
-                <header className="hero-section text-white py-16 sm:py-20">
-                    <div className="max-w-7xl mx-auto px-6 sm:px-8">
-                        <div className="text-center animate-on-scroll">
-                            <h1 className="text-4xl md:text-5xl font-bold">Bestsellers</h1>
-                            <p className="mt-4 text-lg md:text-xl max-w-3xl mx-auto text-gray-300">Discover the most popular and top-selling books, as chosen by the BritBooks community.</p>
-                        </div>
-                    </div>
-                </header>
-
-                {/* This Week's Top 5 Section */}
-                <section className="py-16 sm:py-24 bg-gray-50">
-                    <div className="max-w-7xl mx-auto px-6 sm:px-8">
-                        <div className="animate-on-scroll mb-12">
-                            <h2 className="text-3xl font-bold text-gray-800">This Week's Top 5</h2>
-                        </div>
-                        <div className="space-y-8">
-                            {bestsellers.map((book, index) => (
-                                <div key={book.rank} className="flex flex-col sm:flex-row items-center bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow animate-on-scroll" style={{animationDelay: `${index * 100}ms`}}>
-                                    <div className="flex items-center mb-4 sm:mb-0">
-                                        <span className="text-4xl font-bold text-gray-300 w-16">#{book.rank}</span>
-                                        <img src={book.imageUrl} alt={book.title} className="w-24 h-36 object-cover rounded-md ml-4"/>
-                                    </div>
-                                    <div className="flex-1 sm:ml-8 text-center sm:text-left">
-                                        <h3 className="text-xl font-bold text-gray-800">{book.title}</h3>
-                                        <p className="text-md text-gray-600">by {book.author}</p>
-                                        <div className="flex items-center justify-center sm:justify-start my-2">
-                                            {[...Array(5)].map((_, i) => <StarIcon key={i} className="w-5 h-5 text-yellow-400" />)}
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center sm:ml-8 mt-4 sm:mt-0">
-                                        <p className="text-2xl font-bold text-red-600 mr-6">£{book.price.toFixed(2)}</p>
-                                        <button className="bg-red-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-red-700 transition-transform hover:scale-105">
-                                            Add to Cart
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-            </main>
-
-            <Footer />
-        </div>
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("fade-in-up");
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
     );
+
+    const elements = document.querySelectorAll(".animate-on-scroll");
+    elements.forEach((el) => observer.observe(el));
+
+    return () => {
+      elements.forEach((el) => observer.unobserve(el));
+    };
+  }, []);
+
+  const handleAddToCart = (book) => {
+    setCart((prevCart) => {
+      const existingItem = prevCart.find((item) => item.id === book.id);
+      if (existingItem) {
+        return prevCart.map((item) =>
+          item.id === book.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prevCart, { ...book, quantity: 1 }];
+    });
+    alert(`${book.title} added to your basket!`);
+  };
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentBooks = useMemo(() => bestsellers.slice(indexOfFirstItem, indexOfLastItem), [currentPage, bestsellers]);
+  const totalPages = Math.ceil(bestsellers.length / itemsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) setCurrentPage(page);
+  };
+
+  const visiblePages = useMemo(() => {
+    const pages = [];
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }, [currentPage, totalPages]);
+
+  return (
+    <div className="bg-gray-50 font-sans min-h-screen text-gray-800">
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; opacity: 0; }
+        .hero-section {
+          background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          position: relative;
+        }
+        .hero-section::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(35, 39, 47, 0.7));
+          z-index: 1;
+        }
+        .hero-section > * {
+          position: relative;
+          z-index: 2;
+        }
+        .card-hover:hover { transform: translateY(-3px); box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1); }
+      `}</style>
+
+      <TopBar />
+
+      <main>
+        {/* Hero Section */}
+        <header className="hero-section text-white py-10 sm:py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center animate-on-scroll">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">Bestsellers</h1>
+            <p className="text-lg md:text-xl max-w-3xl mx-auto text-gray-200">Celebrating Britain’s Best Reads – Discover the top-selling books loved by the BritBooks community.</p>
+          </div>
+        </header>
+
+        {/* Bestsellers Section */}
+        <section className="py-8 sm:py-10 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 animate-on-scroll">This Week's Top 100</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {currentBooks.map((book) => (
+                <div
+                  key={book.id}
+                  className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 group flex flex-col overflow-hidden"
+                >
+                  <div className="relative bg-gray-100 p-2 flex-shrink-0">
+                    <Link to={`/browse/${book.id}`} className="block">
+                      <img
+                        src={book.imageUrl}
+                        alt={book.title}
+                        className="w-full h-40 object-cover mx-auto transition-transform duration-300 group-hover:scale-105 rounded-t-lg"
+                      />
+                    </Link>
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                      <Link to={`/browse/${book.id}`}>
+                        <button className="bg-red-600 text-white px-3 py-1 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-2 transition-all duration-300 hover:bg-red-700">
+                          QUICK VIEW
+                        </button>
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="p-2 flex flex-col flex-grow items-center">
+                    <h3 className="font-semibold text-base text-gray-800 mb-1 line-clamp-2">{book.title}</h3>
+                    <p className="text-xs text-gray-600 mb-1">by {book.author}</p>
+                    <div className="flex items-center mb-1">
+                      {[...Array(5)].map((_, i) => (
+                        <StarIcon
+                          key={i}
+                          className={i < Math.round(book.rating) ? "text-yellow-400" : "text-gray-300"}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-lg font-bold text-gray-900 mb-1">£{book.price.toFixed(2)}</p>
+                    <button
+                      onClick={() => handleAddToCart(book)}
+                      className="w-full bg-red-600 text-white font-medium py-1.5 rounded-md hover:bg-red-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    >
+                      Add to Basket
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {bestsellers.length > itemsPerPage && (
+              <div className="mt-4 flex justify-center items-center space-x-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                {visiblePages.map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-3 py-1 rounded-md ${currentPage === page ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} transition-colors`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                {totalPages > visiblePages[visiblePages.length - 1] && (
+                  <span className="text-gray-500">...</span>
+                )}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+    </div>
+  );
 };
 
 export default BestsellersPage;

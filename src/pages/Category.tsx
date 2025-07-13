@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Star } from 'lucide-react';
-import Footer from '../components/footer';
-import TopBar from '../components/Topbar';
-import { books, books as realBooks } from '../data/books';
+import React, { useState, useMemo } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Star } from "lucide-react";
+import Footer from "../components/footer";
+import TopBar from "../components/Topbar";
+import { books } from "../data/books"; // Import the 1 million books
 
 // --- Reusable Components ---
 
@@ -14,8 +14,8 @@ const StarRating = ({ rating, starSize = 16 }) => (
       <Star
         key={i}
         size={starSize}
-        className={i < Math.round(rating) ? 'text-yellow-400' : 'text-gray-300'}
-        fill={i < Math.round(rating) ? 'currentColor' : 'none'}
+        className={i < Math.round(rating) ? "text-yellow-400" : "text-gray-300"}
+        fill={i < Math.round(rating) ? "currentColor" : "none"}
       />
     ))}
   </div>
@@ -30,7 +30,7 @@ const BookCard = ({ book }) => {
           <img
             src={book.imageUrl}
             alt={book.title}
-            className="w-full h-64 object-cover mx-auto transition-transform duration-300 group-hover:scale-105 rounded-t-lg"
+            className="w-full h-48 object-cover mx-auto transition-transform duration-300 group-hover:scale-105 rounded-t-lg"
           />
         </Link>
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
@@ -49,7 +49,7 @@ const BookCard = ({ book }) => {
         </div>
         <p className="text-lg font-bold text-gray-900 mt-auto mb-3">£{book.price.toFixed(2)}</p>
         <button
-          onClick={() => alert('Added to basket!')}
+          onClick={() => alert(`${book.title} added to your basket!`)}
           className="w-full bg-red-600 text-white font-medium py-2 rounded-md hover:bg-red-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
         >
           ADD TO BASKET
@@ -62,54 +62,60 @@ const BookCard = ({ book }) => {
 // Filter Sidebar with Campaign Ads
 const FilterSidebar = ({ filters, setFilters }) => {
   const priceRanges = [
-    { label: 'Under £2.99', min: 0, max: 2.99 },
-    { label: '£3.00 - £5.99', min: 3, max: 5.99 },
-    { label: '£6.00 - £8.99', min: 6, max: 8.99 },
-    { label: '£9.00 - £11.99', min: 9, max: 11.99 },
-    { label: '£12.00+', min: 12, max: Infinity },
+    { label: "Under £2.99", min: 0, max: 2.99 },
+    { label: "£3.00 - £5.99", min: 3, max: 5.99 },
+    { label: "£6.00 - £8.99", min: 6, max: 8.99 },
+    { label: "£9.00 - £11.99", min: 9, max: 11.99 },
+    { label: "£12.00+", min: 12, max: Infinity },
   ];
 
   const categories = [
-    'Fiction', 'Nonfiction', 'Children\'s Books', 'Mystery', 'Science Fiction',
-    'Fantasy', 'Romance', 'Biography', 'History', 'Self-Help', 'Thriller', 'Poetry'
+    "Fiction",
+    "Nonfiction",
+    "Children's Books",
+    "Mystery",
+    "Science Fiction",
+    "Fantasy",
+    "Romance",
+    "Biography",
+    "History",
+    "Self-Help",
+    "Thriller",
+    "Poetry",
   ];
 
   const filterOptions = useMemo(() => {
     const counts = {
       category: {},
-      coverType: {},
       condition: {},
-      ageRange: {},
       price: priceRanges.map(() => 0),
     };
 
-    books.forEach(book => {
-      counts.category[book.genre || 'Uncategorized'] = (counts.category[book.genre || 'Uncategorized'] || 0) + 1;
-      counts.coverType[book.coverType] = (counts.coverType[book.coverType] || 0) + 1;
+    books.forEach((book) => {
+      const mappedCategory = categories.includes(book.genre) ? book.genre : "Uncategorized";
+      counts.category[mappedCategory] = (counts.category[mappedCategory] || 0) + 1;
       counts.condition[book.condition] = (counts.condition[book.condition] || 0) + 1;
-      counts.ageRange[book.ageRange] = (counts.ageRange[book.ageRange] || 0) + 1;
-      
-      const priceIndex = priceRanges.findIndex(range => book.price >= range.min && (book.price <= range.max || range.max === Infinity));
+      const priceIndex = priceRanges.findIndex(
+        (range) => book.price >= range.min && (book.price <= range.max || range.max === Infinity)
+      );
       if (priceIndex !== -1) {
         counts.price[priceIndex]++;
       }
     });
 
     return {
-      category: Object.fromEntries(categories.map(cat => [cat, counts.category[cat] || 0])),
-      coverType: Object.entries(counts.coverType),
+      category: Object.fromEntries(categories.map((cat) => [cat, counts.category[cat] || 0])),
       condition: Object.entries(counts.condition),
-      ageRange: Object.entries(counts.ageRange),
       price: priceRanges.map((range, i) => ({ ...range, count: counts.price[i] })),
     };
   }, []);
 
   const handleFilterClick = (filterType, value) => {
-    setFilters(prev => ({ ...prev, [filterType]: prev[filterType] === value ? null : value }));
+    setFilters((prev) => ({ ...prev, [filterType]: prev[filterType] === value ? null : value }));
   };
-    
+
   const handlePriceFilter = (range) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       priceMin: prev.priceMin === range.min ? null : range.min,
       priceMax: prev.priceMax === range.max ? null : range.max,
@@ -129,7 +135,10 @@ const FilterSidebar = ({ filters, setFilters }) => {
               onChange={() => handleFilterClick(filterKey, value)}
               className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
             />
-            <label htmlFor={`${filterKey}-${value}`} className="ml-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer">
+            <label
+              htmlFor={`${filterKey}-${value}`}
+              className="ml-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer"
+            >
               {value} <span className="text-gray-400">({count})</span>
             </label>
           </li>
@@ -138,16 +147,14 @@ const FilterSidebar = ({ filters, setFilters }) => {
     </div>
   );
 
-  // Campaign Ads Data (Placeholder)
   const campaignAds = [
     {
       id: 1,
       title: "Summer Sale - 20% Off!",
       description: "Get 20% off on all books this summer.",
-      video: "https://media.istockphoto.com/id/1124580988/video/sale-discount-animation.mp4?s=mp4-640x640-is&k=20&c=2zkbq3ujo3KveLEviCLhbTiIH9C7fAaCpABvuZvHoek=", // Replace with your real video
+      video: "https://media.istockphoto.com/id/1124580988/video/sale-discount-animation.mp4?s=mp4-640x640-is&k=20&c=2zkbq3ujo3KveLEviCLhbTiIH9C7fAaCpABvuZvHoek=",
       link: "/special-offers",
     },
-    
     {
       id: 2,
       title: "New Arrivals",
@@ -162,16 +169,13 @@ const FilterSidebar = ({ filters, setFilters }) => {
       <div className="bg-gradient-to-br from-gray-50 to-white p-6 rounded-xl shadow-lg overflow-y-auto max-h-[calc(100vh-200px)]">
         <h3 className="font-bold text-xl text-gray-900 mb-6 border-b-2 border-red-100 pb-2">Filters & Offers</h3>
 
-        {/* Filters Section */}
         <div className="mb-8">
-          {renderFilterSection('Categories', filterOptions.category, 'category')}
-          {renderFilterSection('Cover Type', filterOptions.coverType, 'coverType')}
-          {renderFilterSection('Condition', filterOptions.condition, 'condition')}
-          {renderFilterSection('Age Range', filterOptions.ageRange, 'ageRange')}
+          {renderFilterSection("Categories", filterOptions.category, "category")}
+          {renderFilterSection("Condition", filterOptions.condition, "condition")}
           <div className="mb-6">
             <h4 className="font-medium text-gray-700 mb-2 text-sm uppercase tracking-wide">Price Range</h4>
             <ul className="space-y-2">
-              {filterOptions.price.map(range => (
+              {filterOptions.price.map((range) => (
                 <li key={range.label} className="flex items-center">
                   <input
                     type="checkbox"
@@ -180,7 +184,10 @@ const FilterSidebar = ({ filters, setFilters }) => {
                     onChange={() => handlePriceFilter(range)}
                     className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
                   />
-                  <label htmlFor={`price-${range.label}`} className="ml-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer">
+                  <label
+                    htmlFor={`price-${range.label}`}
+                    className="ml-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer"
+                  >
                     {range.label} <span className="text-gray-400">({range.count})</span>
                   </label>
                 </li>
@@ -195,43 +202,37 @@ const FilterSidebar = ({ filters, setFilters }) => {
           </button>
         </div>
 
-        {/* Campaign Ads Section */}
         <div className="mt-8">
-  <h4 className="font-bold text-lg text-gray-900 mb-4">Special Offers</h4>
-  {campaignAds.map(ad => (
-    <div
-      key={ad.id}
-      className="mb-4 bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
-    >
-      {ad.video ? (
-        <video
-          className="w-full h-24 object-cover"
-          autoPlay
-          loop
-          muted
-          playsInline
-        >
-          <source src={ad.video} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-      ) : (
-        <img
-          src={ad.image}
-          alt={ad.title}
-          className="w-full h-24 object-cover"
-        />
-      )}
-      <div className="p-3">
-        <h5 className="font-semibold text-gray-800 text-sm">{ad.title}</h5>
-        <p className="text-xs text-gray-600">{ad.description}</p>
-        <Link to={ad.link} className="text-red-600 text-xs font-medium hover:underline mt-1 inline-block">
-          Shop Now
-        </Link>
-      </div>
-    </div>
-  ))}
-</div>
-
+          <h4 className="font-bold text-lg text-gray-900 mb-4">Special Offers</h4>
+          {campaignAds.map((ad) => (
+            <div
+              key={ad.id}
+              className="mb-4 bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
+            >
+              {ad.video ? (
+                <video
+                  className="w-full h-24 object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                >
+                  <source src={ad.video} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <img src={ad.image} alt={ad.title} className="w-full h-24 object-cover" />
+              )}
+              <div className="p-3">
+                <h5 className="font-semibold text-gray-800 text-sm">{ad.title}</h5>
+                <p className="text-xs text-gray-600">{ad.description}</p>
+                <Link to={ad.link} className="text-red-600 text-xs font-medium hover:underline mt-1 inline-block">
+                  Shop Now
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </aside>
   );
@@ -241,16 +242,15 @@ const FilterSidebar = ({ filters, setFilters }) => {
 const CategoryMainContent = () => {
   const [filters, setFilters] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12; // Modern default, adjustable
+  const [itemsPerPage, setItemsPerPage] = useState(12); // Default items per page
 
   const filteredBooks = useMemo(() => {
-    return books.filter(book => {
+    return books.filter((book) => {
       if (filters.category && book.genre !== filters.category) return false;
-      if (filters.coverType && book.coverType !== filters.coverType) return false;
       if (filters.condition && book.condition !== filters.condition) return false;
-      if (filters.ageRange && book.ageRange !== filters.ageRange) return false;
       if (filters.priceMin != null && book.price < filters.priceMin) return false;
-      if (filters.priceMax != null && (book.price > filters.priceMax || (filters.priceMax === Infinity && book.price < filters.priceMin))) return false;
+      if (filters.priceMax != null && (book.price > filters.priceMax || (filters.priceMax === Infinity && book.price < filters.priceMin)))
+        return false;
       return true;
     });
   }, [filters]);
@@ -278,13 +278,13 @@ const CategoryMainContent = () => {
       pages.push(i);
     }
     return pages;
-  }, [currentPage, totalPages]);
+  }, [currentPage, totalPages, itemsPerPage]);
 
   return (
     <div className="container mx-auto px-4 sm:px-8 py-8">
       <div className="flex flex-col lg:flex-row gap-6">
         <FilterSidebar filters={filters} setFilters={setFilters} />
-        
+
         <div className="w-full lg:w-3/4">
           <div className="flex flex-wrap justify-between items-center border-b border-gray-200 py-3 mb-6">
             <div className="flex items-center space-x-3">
@@ -292,6 +292,9 @@ const CategoryMainContent = () => {
               <select
                 id="sort-by"
                 className="border border-gray-300 rounded-md py-1.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                onChange={(e) => {
+                  // Add sorting logic here if needed
+                }}
               >
                 <option value="name">Name</option>
                 <option value="price">Price</option>
@@ -304,12 +307,13 @@ const CategoryMainContent = () => {
               <label htmlFor="show" className="font-medium text-gray-700">Show:</label>
               <select
                 id="show"
-                className="border border-gray-300 rounded-md py-1.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                value={itemsPerPage}
                 onChange={(e) => {
                   const newItemsPerPage = parseInt(e.target.value);
                   setItemsPerPage(newItemsPerPage);
-                  setCurrentPage(1);
+                  setCurrentPage(1); // Reset to first page on change
                 }}
+                className="border border-gray-300 rounded-md py-1.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
               >
                 <option value="12">12</option>
                 <option value="24">24</option>
@@ -319,7 +323,7 @@ const CategoryMainContent = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {currentBooks.map(book => (
+            {currentBooks.map((book) => (
               <BookCard key={book.id} book={book} />
             ))}
           </div>
@@ -336,18 +340,16 @@ const CategoryMainContent = () => {
               >
                 Previous
               </button>
-              {visiblePages.map(page => (
+              {visiblePages.map((page) => (
                 <button
                   key={page}
                   onClick={() => handlePageChange(page)}
-                  className={`px-4 py-2 rounded-md ${currentPage === page ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition-colors`}
+                  className={`px-4 py-2 rounded-md ${currentPage === page ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} transition-colors`}
                 >
                   {page}
                 </button>
               ))}
-              {totalPages > visiblePages[visiblePages.length - 1] && (
-                <span className="text-gray-500">...</span>
-              )}
+              {totalPages > visiblePages[visiblePages.length - 1] && <span className="text-gray-500">...</span>}
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"

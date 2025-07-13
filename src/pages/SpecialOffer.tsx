@@ -1,103 +1,182 @@
-import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import Footer from '../components/footer';
-import TopBar from '../components/Topbar'; // ✅ Import TopBar
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import Footer from "../components/footer";
+import TopBar from "../components/Topbar";
 
 // --- SVG ICONS ---
 const StarIcon = (props) => (
-  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    stroke="currentColor"
+    strokeWidth="1"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-  </svg>
-);
-const InstagramIcon = (props) => (
-  <svg {...props} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.012 3.584-.07 4.85c-.148 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.584-.012-4.85-.07c-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.85s.012-3.584.07-4.85c.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.85-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072s3.667-.014 4.947-.072c4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.196-4.358-2.617-6.78-6.979-6.98-1.281-.059-1.689-.073-4.948-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.79 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-  </svg>
-);
-const TwitterIcon = (props) => (
-  <svg {...props} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M23.643 4.937c-.835.37-1.732.62-2.675.733.962-.576 1.7-1.49 2.048-2.578-.9.534-1.897.922-2.958 1.13-.85-.904-2.06-1.47-3.4-1.47-2.572 0-4.658 2.086-4.658 4.66 0 .364.042.718.12 1.06-3.873-.195-7.304-2.05-9.602-4.868-.4.69-.63 1.49-.63 2.342 0 1.616.823 3.043 2.072 3.878-.764-.025-1.482-.234-2.11-.583v.06c0 2.257 1.605 4.14 3.737 4.568-.39.106-.803.163-1.227.163-.3 0-.593-.028-.877-.082.593 1.85 2.313 3.198 4.352 3.234-1.595 1.25-3.604 1.995-5.786 1.995-.376 0-.747-.022-1.112-.065 2.062 1.323 4.51 2.093 7.14 2.093 8.57 0 13.255-7.098 13.255-13.254 0-.2-.005-.402-.014-.602.91-.658 1.7-1.477 2.323-2.41z" />
-  </svg>
-);
-const FacebookIcon = (props) => (
-  <svg {...props} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M22.675 0h-21.35C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325V1.325C24 .593 23.407 0 22.675 0z" />
   </svg>
 );
 
 // --- Mock Data ---
 const specialOffers = [
-  { rank: 1, title: 'The Night Circus', author: 'Erin Morgenstern', originalPrice: 19.99, discountPrice: 12.99, imageUrl: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1387124618l/9361589.jpg' },
-  { rank: 2, title: 'Where the Crawdads Sing', author: 'Delia Owens', originalPrice: 17.5, discountPrice: 10.5, imageUrl: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1553383480l/36809135.jpg' },
-  { rank: 3, title: 'Circe', author: 'Madeline Miller', originalPrice: 20.0, discountPrice: 14.99, imageUrl: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1508879575l/35959740.jpg' },
-  { rank: 4, title: 'The Song of Achilles', author: 'Madeline Miller', originalPrice: 18.99, discountPrice: 11.99, imageUrl: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1357177534l/11250317.jpg' },
-  { rank: 5, title: 'A Man Called Ove', author: 'Fredrik Backman', originalPrice: 16.99, discountPrice: 9.99, imageUrl: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1405259930l/18774964.jpg' },
+  { id: 1, title: "The Night Circus", author: "Erin Morgenstern", originalPrice: 19.99, discountPrice: 12.99, imageUrl: "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1387124618l/9361589.jpg", rating: 4.2 },
+  { id: 2, title: "Where the Crawdads Sing", author: "Delia Owens", originalPrice: 17.5, discountPrice: 10.5, imageUrl: "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1553383480l/36809135.jpg", rating: 4.5 },
+  { id: 3, title: "Circe", author: "Madeline Miller", originalPrice: 20.0, discountPrice: 14.99, imageUrl: "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1508879575l/35959740.jpg", rating: 4.3 },
+  { id: 4, title: "The Song of Achilles", author: "Madeline Miller", originalPrice: 18.99, discountPrice: 11.99, imageUrl: "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1357177534l/11250317.jpg", rating: 4.6 },
+  { id: 5, title: "A Man Called Ove", author: "Fredrik Backman", originalPrice: 16.99, discountPrice: 9.99, imageUrl: "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1405259930l/18774964.jpg", rating: 4.4 },
+];
+
+// --- Campaign Data ---
+const campaignAds = [
+  {
+    id: 1,
+    title: "Summer Sale - 20% Off!",
+    description: "Get 20% off on all books this summer.",
+    video: "https://media.istockphoto.com/id/1124580988/video/sale-discount-animation.mp4?s=mp4-640x640-is&k=20&c=2zkbq3ujo3KveLEviCLhbTiIH9C7fAaCpABvuZvHoek=", // Replace with your real video
+    link: "/special-offers",
+  },
+  {
+    id: 2,
+    title: "New Arrivals",
+    description: "Check out the latest books added!",
+    image: "https://via.placeholder.com/300x100?text=New+Arrivals",
+    link: "/shop/new-arrivals",
+  },
 ];
 
 // --- Component ---
 const SpecialOffersPage = () => {
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('fade-in-up');
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
-    );
+  const [cart, setCart] = useState([]);
 
-    const elements = document.querySelectorAll('.animate-on-scroll');
-    elements.forEach((el) => observer.observe(el));
-
-    return () => {
-      elements.forEach((el) => observer.unobserve(el));
-    };
-  }, []);
+  const handleAddToCart = (book) => {
+    setCart((prevCart) => {
+      const existingItem = prevCart.find((item) => item.id === book.id);
+      if (existingItem) {
+        return prevCart.map((item) =>
+          item.id === book.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prevCart, { ...book, quantity: 1 }];
+    });
+    alert(`${book.title} added to cart!`);
+  };
 
   return (
-    <div className="bg-white font-sans">
-      <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
-      `}</style>
-
+    <div className="bg-gray-50 font-sans min-h-screen">
       <TopBar />
 
-      <header className="text-white py-16 bg-[url('https://your-banner-image-url')] bg-cover bg-center relative">
-        <div className="absolute inset-0 bg-black opacity-50"></div>
-        <div className="relative z-10 text-center">
-          <h1 className="text-5xl font-bold">Special Offers</h1>
-          <p className="text-lg mt-4">Explore our exclusive deals and save big on your favorite books!</p>
-        </div>
-      </header>
+      <header className="relative text-white py-12 overflow-hidden">
+  {/* Background video */}
+  <video
+    autoPlay
+    loop
+    muted
+    playsInline
+    className="absolute top-0 left-0 w-full h-full object-cover z-0"
+  >
+    <source
+      src="https://media.istockphoto.com/id/1310576990/fr/vid%C3%A9o/%C3%A9tiquette-3-jours-gauche-sur-fond-blanc-ic%C3%B4ne-plate-motion-graphics.mp4?s=mp4-640x640-is&k=20&c=ezUJb1sIa11feB4HwEFMnEPHHjvqcL5wqkyuhSp_6zQ="
+      type="video/mp4"
+    />
+    Your browser does not support the video tag.
+  </video>
 
-      <section className="py-16 px-6 max-w-7xl mx-auto space-y-10">
-        {specialOffers.map((book, index) => (
-          <div key={book.rank} className="flex flex-col sm:flex-row items-center bg-white p-6 rounded-lg shadow-md animate-on-scroll" style={{ animationDelay: `${index * 100}ms` }}>
-            <div className="flex items-center mb-4 sm:mb-0">
-              <span className="text-4xl font-bold text-gray-300 w-16">#{book.rank}</span>
-              <img src={book.imageUrl} alt={book.title} className="w-24 h-36 object-cover rounded-md ml-4" />
-            </div>
-            <div className="flex-1 sm:ml-8 text-center sm:text-left">
-              <h3 className="text-xl font-bold">{book.title}</h3>
-              <p className="text-gray-600">by {book.author}</p>
-              <div className="flex justify-center sm:justify-start mt-2">
-                {[...Array(5)].map((_, i) => <StarIcon key={i} className="text-yellow-400 w-5 h-5" />)}
+  {/* Dark overlay */}
+  <div className="absolute inset-0 bg-black opacity-50 z-10"></div>
+
+  {/* Foreground content */}
+  <div className="relative z-20 text-center">
+    <h1 className="text-4xl font-bold">Special Offers</h1>
+    <p className="text-md mt-3">Explore our exclusive deals and save big on your favorite books!</p>
+  </div>
+</header>
+
+
+      <main className="container mx-auto px-4 sm:px-6 py-8">
+        {/* Campaign Section */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Campaigns & Promotions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {campaignAds.map((ad) => (
+              <div
+                key={ad.id}
+                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
+              >
+                <img src={ad.image} alt={ad.title} className="w-full h-24 object-cover" />
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-800 text-sm">{ad.title}</h3>
+                  <p className="text-xs text-gray-600">{ad.description}</p>
+                  <Link to={ad.link} className="text-red-600 text-xs font-medium hover:underline mt-2 inline-block">
+                    Shop Now
+                  </Link>
+                </div>
               </div>
-            </div>
-            <div className="mt-4 sm:mt-0 sm:ml-8 text-center sm:text-right">
-              <p className="text-2xl font-bold text-red-600">£{book.discountPrice.toFixed(2)}</p>
-              <p className="text-gray-500 line-through">£{book.originalPrice.toFixed(2)}</p>
-              <button className="mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">Add to Cart</button>
-            </div>
+            ))}
           </div>
-        ))}
-      </section>
+        </section>
+
+        {/* Special Offers Section */}
+        <section>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Special Offers</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {specialOffers.map((book) => (
+              <div
+                key={book.id}
+                className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
+              >
+                <div className="relative bg-gray-100 p-3 flex-shrink-0">
+                  <Link to={`/browse/${book.id}`} className="block">
+                    <img
+                      src={book.imageUrl}
+                      alt={book.title}
+                      className="w-full h-48 object-cover rounded-t-lg"
+                    />
+                  </Link>
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                    <Link to={`/browse/${book.id}`}>
+                      <button className="bg-red-600 text-white px-3 py-1 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300 hover:bg-red-700">
+                        QUICK VIEW
+                      </button>
+                    </Link>
+                  </div>
+                </div>
+                <div className="p-4 flex flex-col flex-grow items-center">
+                  <h3 className="font-semibold text-sm text-gray-800 h-12 leading-6 mb-2 line-clamp-2">
+                    {book.title}
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-1">{book.author}</p>
+                  <div className="mb-1">
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <StarIcon
+                          key={i}
+                          className={i < Math.round(book.rating) ? "text-yellow-400" : "text-gray-300"}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900 mb-2">
+                    £{book.discountPrice.toFixed(2)}
+                  </p>
+                  <p className="text-sm text-gray-500 line-through mb-2">
+                    £{book.originalPrice.toFixed(2)}
+                  </p>
+                  <button
+                    onClick={() => handleAddToCart(book)}
+                    className="w-full bg-red-600 text-white font-medium py-2 rounded-md hover:bg-red-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    ADD TO BASKET
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
 
       <Footer />
     </div>

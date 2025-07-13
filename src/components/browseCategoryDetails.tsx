@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../../redux/cartSlice";
-import { books } from "../data/books";
 import TopBar from "../components/Topbar";
 import Footer from "../components/footer";
 import {
@@ -17,6 +16,14 @@ import {
   ShoppingCart,
 } from "lucide-react";
 
+// --- UPDATED IMPORT ---
+// Now importing the 'books' array from your new 'book.tsx' file.
+// Ensure the path './book.tsx' is correct relative to this component file.
+import { books } from "../data/books"; // 👈 Changed from "../data/books"
+
+// --- (No changes to sub-components) ---
+
+// Star Icon Component
 const StarIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -33,6 +40,7 @@ const StarIcon = () => (
   </svg>
 );
 
+// Book Card Component
 const BookCard = ({ id, img, title, author, price }) => (
   <div className="group relative flex-shrink-0 w-[180px] text-left p-2">
     <img
@@ -40,6 +48,13 @@ const BookCard = ({ id, img, title, author, price }) => (
       alt={title}
       className="w-full h-48 object-cover mb-2 rounded-md"
     />
+    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+      <a href={`/browse/${id}`}>
+        <button className="bg-red-600 text-white px-3 py-1 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300 hover:bg-red-700">
+          QUICK VIEW
+        </button>
+      </a>
+    </div>
     <h3 className="font-semibold text-sm truncate mt-1">{title}</h3>
     <p className="text-gray-500 text-xs mb-1">{author}</p>
     <div className="flex items-center text-gray-300 mb-1">
@@ -51,68 +66,74 @@ const BookCard = ({ id, img, title, author, price }) => (
           height="16"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="text-gray-300"
+          className={i < Math.round(4) ? "text-yellow-400" : "text-gray-300"}
         >
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
         </svg>
       ))}
     </div>
-    <p className="text-blue-600 font-bold">{price}</p>
-    <button className="bg-red-100 text-red-700 font-semibold px-3 py-1 rounded-md text-xs w-full transition-colors hover:bg-red-200 mt-2">
+    <p className="text-lg font-bold text-gray-900">£{price.toFixed(2)}</p>
+    <button
+      onClick={() => alert(`${title} added to your basket!`)}
+      className="bg-red-600 text-white font-medium px-3 py-1 rounded-md text-xs w-full transition-colors hover:bg-red-700 mt-2"
+    >
       ADD TO BASKET
     </button>
-    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-      <a href={`/browse/${id}`}>
-        <button className="bg-red-500 text-white px-3 py-1 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300">
-          QUICK VIEW
-        </button>
-      </a>
-    </div>
   </div>
 );
 
+// BookShelf Component with Pagination
 const BookShelf = ({ title, books }) => {
-  const scrollRef = useRef(null);
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      const { scrollLeft, clientWidth } = scrollRef.current;
-      const scrollAmount = clientWidth * 0.8;
-      const scrollTo = direction === "left" ? scrollLeft - scrollAmount : scrollLeft + scrollAmount;
-      scrollRef.current.scrollTo({ left: scrollTo, behavior: "smooth" });
-    }
+  const [currentPage, setCurrentPage] = useState(1);
+  const booksPerPage = 5;
+  const maxPages = 20;
+
+  const totalPages = Math.min(Math.ceil(books.length / booksPerPage), maxPages);
+  const startIndex = (currentPage - 1) * booksPerPage;
+  const paginatedBooks = books.slice(startIndex, startIndex + booksPerPage);
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
   };
 
   return (
     <section className="py-6">
-      <div className="flex justify-between items-center mb-3">
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-blue-800">{title}</h2>
-        <div className="flex space-x-2">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => scroll("left")}
-            className="p-1 border rounded-md hover:bg-gray-100 text-gray-500"
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+            className="px-2 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={16} />
           </button>
+          <span className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages}
+          </span>
           <button
-            onClick={() => scroll("right")}
-            className="p-1 border rounded-md hover:bg-gray-100 text-gray-500"
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className="px-2 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={16} />
           </button>
         </div>
       </div>
-      <div
-        ref={scrollRef}
-        className="flex overflow-x-auto space-x-4 pb-2 scrollbar-hide"
-      >
-        {books.map((book, index) => (
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+        {paginatedBooks.map((book) => (
           <BookCard
-            key={index}
+            key={book.id}
             id={book.id}
             img={book.imageUrl}
             title={book.title}
             author={book.author}
-            price={`£${book.price.toFixed(2)}`}
+            price={book.price}
           />
         ))}
       </div>
@@ -120,6 +141,8 @@ const BookShelf = ({ title, books }) => {
   );
 };
 
+
+// --- Main Component ---
 const BrowseCategoryDetail = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
@@ -137,12 +160,13 @@ const BrowseCategoryDetail = () => {
     alert(`${quantity} x ${book.title} added to cart!`);
   };
 
+  // This logic now uses the imported books from book.tsx
   const relatedProducts = books
     .filter((b) => b.genre === book.genre && b.id !== book.id)
-    .slice(0, 8);
+    .slice(0, 10); // Increased slice to 10 for better pagination
 
   return (
-    <div className="bg-white">
+    <div className="bg-gray-50 min-h-screen">
       <TopBar />
       <main className="container mx-auto px-4 sm:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -152,7 +176,6 @@ const BrowseCategoryDetail = () => {
               alt={`Cover of ${book.title}`}
               className="w-full h-80 object-contain rounded-lg shadow-sm"
             />
-        
           </div>
 
           <div>
@@ -167,19 +190,19 @@ const BrowseCategoryDetail = () => {
               </div>
               <a
                 href="#reviews"
-                className="ml-2 text-gray-500 hover:text-blue-600 underline"
+                className="ml-2 text-gray-500 hover:text-red-600 underline"
               >
                 {book.reviews || 5} Reviews
               </a>
               <a
                 href="#add-review"
-                className="ml-2 text-gray-500 hover:text-blue-600 underline"
+                className="ml-2 text-gray-500 hover:text-red-600 underline"
               >
                 Add Your Review
               </a>
             </div>
 
-            <p className="text-xl font-bold text-red-600 mb-3">
+            <p className="text-xl font-bold text-gray-900 mb-3">
               £{book.price.toFixed(2)}
             </p>
 
@@ -229,7 +252,7 @@ const BrowseCategoryDetail = () => {
               </div>
               <button
                 onClick={handleAddToCart}
-                className="bg-red-500 text-white font-bold px-4 py-2 rounded-md hover:bg-red-600 transition-colors flex items-center gap-1"
+                className="bg-red-600 text-white font-bold px-4 py-2 rounded-md hover:bg-red-700 transition-colors flex items-center gap-1"
               >
                 <ShoppingCart size={16} />
                 ADD TO BASKET
@@ -237,7 +260,7 @@ const BrowseCategoryDetail = () => {
             </div>
 
             <div className="flex items-center gap-6 mb-3">
-              <button className="flex items-center text-gray-600 hover:text-red-500">
+              <button className="flex items-center text-gray-600 hover:text-red-600">
                 <Heart size={18} className="mr-1" /> Add to Wish List
               </button>
               <div className="flex items-center text-sm text-gray-600">
@@ -264,9 +287,7 @@ const BrowseCategoryDetail = () => {
               <button
                 onClick={() => setActiveTab("details")}
                 className={`px-4 py-2 text-sm font-semibold rounded-md ${
-                  activeTab === "details"
-                    ? "bg-white shadow"
-                    : "text-gray-600 hover:bg-gray-200"
+                  activeTab === "details" ? "bg-white shadow" : "text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 Details
@@ -274,9 +295,7 @@ const BrowseCategoryDetail = () => {
               <button
                 onClick={() => setActiveTab("info")}
                 className={`px-4 py-2 text-sm font-semibold rounded-md ${
-                  activeTab === "info"
-                    ? "bg-white shadow"
-                    : "text-gray-600 hover:bg-gray-200"
+                  activeTab === "info" ? "bg-white shadow" : "text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 Additional Information
@@ -284,9 +303,7 @@ const BrowseCategoryDetail = () => {
               <button
                 onClick={() => setActiveTab("reviews")}
                 className={`px-4 py-2 text-sm font-semibold rounded-md ${
-                  activeTab === "reviews"
-                    ? "bg-white shadow"
-                    : "text-gray-600 hover:bg-gray-200"
+                  activeTab === "reviews" ? "bg-white shadow" : "text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 Reviews ({book.reviews || 5})
