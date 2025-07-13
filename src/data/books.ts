@@ -254,7 +254,7 @@ const generateMillionBooks = () => {
     "Adventure",
   ];
   const conditions = ["Excellent", "Good", "Pristine", "Standard"];
-  const baseCount = 50_000; // Generate 50,000 sets of 20 books to reach ~1M
+  const baseCount = 50_00; // Generate 50,000 sets of 20 books to reach ~1M
   const booksArray = [];
 
   for (let i = 0; i < baseCount; i++) {
