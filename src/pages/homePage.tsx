@@ -47,7 +47,7 @@ const BookCard = ({ id, img, title, author, price }) => (
 // Updated Book Shelf Component with Vertical Grid and Pagination
 const BookShelf = ({ title, books: allBooks }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8; // Adjustable based on design
+  const itemsPerPage = 4; // Adjustable based on design
 
   const paginatedBooks = useMemo(() => {
     const indexOfLastItem = currentPage * itemsPerPage;
