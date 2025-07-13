@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import TopBar from '../components/Topbar';
-import Footer from '../components/Footer'; // Assuming Footer is a separate component
+import Footer from '../components/footer'; // Assuming Footer is a separate component
 
 // --- SVG ICONS ---
 const XIcon = (props) => (
