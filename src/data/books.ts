@@ -252,7 +252,36 @@ const generateMillionBooks = () => {
     "Thriller",
     "Historical",
     "Adventure",
+    "Science Fiction",
+    "Horror",
+    "Biography",
+    "Autobiography",
+    "Self-Help",
+    "Health & Wellness",
+    "Children's Books",
+    "Young Adult",
+    "Poetry",
+    "Comics & Graphic Novels",
+    "Cooking",
+    "Travel",
+    "Art & Photography",
+    "Religion & Spirituality",
+    "Politics",
+    "Business & Finance",
+    "Technology",
+    "Education",
+    "Law",
+    "Sports",
+    "Parenting",
+    "Science & Nature",
+    "Philosophy",
+    "Crafts & Hobbies",
+    "Music",
+    "Drama",
+    "Short Stories",
+    "True Crime"
   ];
+  
   const conditions = ["Excellent", "Good", "Pristine", "Standard"];
   const baseCount = 50_00; // Generate 50,000 sets of 20 books to reach ~1M
   const booksArray = [];

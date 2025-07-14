@@ -198,7 +198,7 @@ const Homepage = () => {
             <div className="w-full sm:w-1/2">
               <h2 className="text-3xl sm:text-5xl font-light leading-tight mb-4 sm:mb-6">
                 Welcome to <span className="font-bold text-blue-900">brit</span>
-                <span className="font-bold text-red-600">books</span>
+                <span className="font-bold text-red-600">books </span>
                 <br className="block sm:hidden" />
                 <span className="font-bold text-gray-900">online books</span> super store
               </h2>
@@ -215,9 +215,9 @@ const Homepage = () => {
             <BookShelf title="Popular Books" books={popularBooks} />
             <div className="py-8 sm:py-12 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
               {[
-                { title: "Top 10 Best Sellers", image: "https://cdn-icons-png.flaticon.com/512/2331/2331970.png" },
-                { title: "Order now and get 10% discount for limited time", image: "https://cdn-icons-png.flaticon.com/512/1042/1042306.png" },
-                { title: "Special discount for students", image: "https://cdn-icons-png.flaticon.com/512/3036/3036996.png" },
+                { title: "Top 10 Best Sellers", image: "https://cdn-icons-png.flaticon.com/512/2331/2331970.png", link: "/bestsellers" },
+                { title: "Order now and get 10% discount for limited time", image: "https://cdn-icons-png.flaticon.com/512/1042/1042306.png", link: "/clearance" },
+                { title: "Special discount for students", image: "https://cdn-icons-png.flaticon.com/512/3036/3036996.png", link: "/special-offers" },
               ].map((item, idx) => (
                 <div
                   key={idx}
@@ -233,9 +233,11 @@ const Homepage = () => {
                   <div className="absolute inset-0 bg-black bg-opacity-40"></div>
                   <div className="relative z-10 p-4">
                     <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">{item.title}</h3>
-                    <button className="bg-white text-black px-4 sm:px-6 py-2 rounded-full hover:bg-gray-200 transition text-sm sm:text-base">
-                      SHOP NOW!
-                    </button>
+                    <Link to={item.link}>
+                      <button className="bg-white text-black px-4 sm:px-6 py-2 rounded-full hover:bg-gray-200 transition text-sm sm:text-base">
+                        SHOP NOW!
+                      </button>
+                    </Link>
                   </div>
                 </div>
               ))}

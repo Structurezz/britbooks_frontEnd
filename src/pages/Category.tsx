@@ -149,18 +149,28 @@ const FilterSidebar = ({ filters, setFilters, isOpen, setIsOpen, setSortBy }) =>
     };
 
     books.forEach((book) => {
+      // Map known category or fallback
       const mappedCategory = categories.includes(book.genre) ? book.genre : "Uncategorized";
       counts.category[mappedCategory] = (counts.category[mappedCategory] || 0) + 1;
-      counts.condition[book.condition] = (counts.condition[book.condition] || 0) + 1;
+    
+      // Count condition
+      const bookCondition = book.condition || "Unknown";
+      counts.condition[bookCondition] = (counts.condition[bookCondition] || 0) + 1;
+    
+      // Count price range
+      const price = typeof book.price === "number" ? book.price : 0;
       const priceIndex = priceRanges.findIndex(
-        (range) => book.price >= range.min && (book.price <= range.max || range.max === Infinity)
+        (range) => price >= range.min && price <= range.max
       );
       if (priceIndex !== -1) {
         counts.price[priceIndex]++;
       }
-      const roundedRating = Math.floor(book.rating);
-      counts.rating[roundedRating] = (counts.rating[roundedRating] || 0) + 1;
+    
+      // Count floored rating
+      const rating = typeof book.rating === "number" ? Math.floor(book.rating) : 0;
+      counts.rating[rating] = (counts.rating[rating] || 0) + 1;
     });
+    
 
     return {
       category: Object.fromEntries(categories.map((cat) => [cat, counts.category[cat] || 0])),
@@ -234,8 +244,8 @@ const FilterSidebar = ({ filters, setFilters, isOpen, setIsOpen, setSortBy }) =>
   ];
 
   const recentlyViewed = [
-    { id: 1, title: "The Great Gatsby", image: "https://via.placeholder.com/50" },
-    { id: 2, title: "1984", image: "https://via.placeholder.com/50" },
+    { id: 1, title: "The Great Gatsby", image: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1650033243i/41733839.jpg" },
+    { id: 2, title: "1984", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWvX2esDaX_a0_vN_EXQXccu-ZEKCTiQeEPQ&s" },
   ];
 
   const topDeals = [
