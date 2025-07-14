@@ -163,22 +163,22 @@ const TopBar = () => {
           {/* Spacer for top section (Visible only on desktop) */}
           <div className="hidden sm:block h-24 sm:h-24 w-44 sm:w-60 flex-shrink-0"></div>
 
-          {/* Search */}
-          <div className="w-full sm:max-w-lg mx-0 sm:mx-4 mt-2 sm:mt-0">
+          {/* Search (Visible only on desktop) */}
+          <div className="hidden sm:block w-full sm:max-w-lg mx-0 sm:mx-4 mt-2 sm:mt-0">
             <div className="relative">
               <input
                 type="text"
                 placeholder="Search For Books"
                 className="w-full py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <button className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 muchacho">
                 <SearchIcon className="h-5 w-5" />
               </button>
             </div>
           </div>
 
-          {/* Phone Number */}
-          <div className="text-red-600 font-bold text-lg mt-2 sm:mt-0">
+          {/* Phone Number (Visible only on desktop) */}
+          <div className="hidden sm:block text-red-600 font-bold text-lg mt-2 sm:mt-0">
             📞 01234 567890
           </div>
         </div>
