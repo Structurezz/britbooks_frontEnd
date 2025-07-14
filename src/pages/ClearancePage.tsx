@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
+import { createRoot } from 'react-dom/client';
 import { Link } from 'react-router-dom';
-import { Star, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Star, ChevronLeft, ChevronRight, Search, Gift, Book, Clock } from "lucide-react";
 import TopBar from '../components/Topbar';
 import Footer from '../components/footer';
 import { books } from '../data/books';
@@ -20,7 +22,6 @@ const StarRating = ({ rating, starSize = 16 }) => (
   </div>
 );
 
-// ✅ Modernized Book Card
 const BookCard = ({ img, title, author, price, rating, id, originalPrice }) => {
   const numericPrice = typeof price === 'string' ? parseFloat(price.replace("£", "")) : price;
   const numericOriginalPrice = typeof originalPrice === 'string' ? parseFloat(originalPrice.replace("£", "")) : originalPrice;
@@ -36,7 +37,6 @@ const BookCard = ({ img, title, author, price, rating, id, originalPrice }) => {
             className="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </Link>
-        {/* Discount Badge */}
         <div className="absolute top-2 right-2 bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded-full">
           -{discount}%
         </div>
@@ -69,18 +69,120 @@ const BookCard = ({ img, title, author, price, rating, id, originalPrice }) => {
   );
 };
 
+const QuizModal = ({ isOpen, onClose, onComplete }) => {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState([]);
+  const questions = [
+    {
+      question: "Which genre do you enjoy most?",
+      options: ["Fiction", "Non-Fiction", "Fantasy", "Mystery"],
+    },
+    {
+      question: "How often do you read books?",
+      options: ["Daily", "Weekly", "Monthly", "Rarely"],
+    },
+    {
+      question: "What's your favorite book format?",
+      options: ["Hardcover", "Paperback", "E-book", "Audiobook"],
+    },
+  ];
 
-// --- Main Clearance Page Component ---
+  const handleAnswer = (answer) => {
+    setAnswers([...answers, answer]);
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    } else {
+      onComplete(answers.concat(answer));
+      setCurrentQuestion(0);
+      setAnswers([]);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+        <h2 className="text-2xl font-bold mb-4">Book Lover's Quiz</h2>
+        <p className="mb-4">{questions[currentQuestion].question}</p>
+        <div className="grid grid-cols-2 gap-2">
+          {questions[currentQuestion].options.map((option, index) => (
+            <button
+              key={index}
+              onClick={() => handleAnswer(option)}
+              className="bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition-colors"
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={onClose}
+          className="mt-4 text-gray-500 hover:text-gray-700"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const SurveyModal = ({ isOpen, onClose, onComplete }) => {
+  const [feedback, setFeedback] = useState('');
+
+  const handleSubmit = () => {
+    if (feedback.trim()) {
+      onComplete(feedback);
+      setFeedback('');
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+        <h2 className="text-2xl font-bold mb-4">Tell Us About Your Reading!</h2>
+        <textarea
+          value={feedback}
+          onChange={(e) => setFeedback(e.target.value)}
+          placeholder="Share your favorite book or reading experience..."
+          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+          rows="4"
+        />
+        <div className="flex justify-end gap-2 mt-4">
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
+          >
+            Submit
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ClearancePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('discount');
+  const [sortBy, setData] = useState('discount');
   const [currentPage, setCurrentPage] = useState(1);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [showSurvey, setShowSurvey] = useState(false);
+  const [points, setPoints] = useState(0);
+  const [showReward, setShowReward] = useState(false);
   const BOOKS_PER_PAGE = 12;
 
   const clearanceBooks = useMemo(() => books.map(book => ({
     ...book,
     img: book.imageUrl,
-    originalPrice: book.price * (1 + (Math.random() * 0.5 + 0.2)), // Simulate a 20-70% discount
+    originalPrice: book.price * (1 + (Math.random() * 0.5 + 0.2)),
   })), []);
 
   const filteredAndSortedBooks = useMemo(() => {
@@ -108,28 +210,56 @@ const ClearancePage = () => {
     currentPage * BOOKS_PER_PAGE
   );
 
+  const handleQuizComplete = (answers) => {
+    setPoints(points + 50);
+    setShowQuiz(false);
+    setShowReward(true);
+    setTimeout(() => setShowReward(false), 3000);
+  };
+
+  const handleSurveyComplete = (feedback) => {
+    setPoints(points + 30);
+    setShowSurvey(false);
+    setShowReward(true);
+    setTimeout(() => setShowReward(false), 3000);
+  };
+
   return (
     <div className="bg-slate-50 min-h-screen flex flex-col font-sans">
       <TopBar />
       <main className="flex-1">
-        {/* ✅ Modern Hero Section */}
         <div className="bg-gradient-to-br from-red-600 to-red-800 text-white text-center py-12 md:py-10 px-4">
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">Clearance Sale</h1>
-            <p className="mt-4 text-lg md:text-xl text-red-100 max-w-2xl mx-auto">Unbeatable prices on your next favorite book. Grab these limited-time deals before they're gone!</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">Clearance Sale</h1>
+          <p className="mt-4 text-lg md:text-xl text-red-100 max-w-2xl mx-auto">
+            Unbeatable prices on your next favorite book. Grab these limited-time deals before they're gone!
+          </p>
+          <div className="mt-6 flex justify-center gap-4">
+            <button
+              onClick={() => setShowQuiz(true)}
+              className="flex items-center gap-2 bg-yellow-400 text-gray-900 px-4 py-2 rounded-md font-semibold hover:bg-yellow-500 transition-colors"
+            >
+              <Book size={20} /> Take Our Quiz!
+            </button>
+            <button
+              onClick={() => setShowSurvey(true)}
+              className="flex items-center gap-2 bg-yellow-400 text-gray-900 px-4 py-2 rounded-md font-semibold hover:bg-yellow-500 transition-colors"
+            >
+              <Gift size={20} /> Share Your Feedback
+            </button>
+          </div>
         </div>
 
         <div className="max-w-7xl mx-auto p-4 sm:p-8">
-          {/* ✅ Styled Search and Sort Controls */}
           <div className="bg-white p-4 rounded-lg shadow-sm mb-8 flex flex-col md:flex-row items-center gap-4">
             <div className="relative w-full md:w-2/3">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search by title, author..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full p-3 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by title, author..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-3 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
             </div>
             <select
               value={sortBy}
@@ -143,6 +273,20 @@ const ClearancePage = () => {
             </select>
           </div>
 
+          <div className="mb-8 bg-yellow-100 p-4 rounded-lg flex items-center gap-2">
+            <Gift size={24} className="text-yellow-600" />
+            <p className="text-gray-800">
+              Earn <strong>{points}</strong> points! Complete quizzes and surveys for a chance to win free books!
+            </p>
+          </div>
+
+          {showReward && (
+            <div className="mb-8 bg-green-100 p-4 rounded-lg flex items-center gap-2 animate-bounce">
+              <Gift size={24} className="text-green-600" />
+              <p className="text-gray-800">Congrats! You've earned points for a chance to win a free book!</p>
+            </div>
+          )}
+
           {paginatedBooks.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {paginatedBooks.map((book) => (
@@ -154,12 +298,11 @@ const ClearancePage = () => {
             </div>
           ) : (
             <div className="text-center text-gray-500 py-16">
-                <h3 className="text-xl font-semibold">No Books Found</h3>
-                <p>Try adjusting your search or filters.</p>
+              <h3 className="text-xl font-semibold">No Books Found</h3>
+              <p>Try adjusting your search or filters.</p>
             </div>
           )}
 
-          {/* Pagination Controls */}
           <div className="flex justify-center items-center mt-10 space-x-2">
             <button
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
@@ -181,6 +324,16 @@ const ClearancePage = () => {
           </div>
         </div>
       </main>
+      <QuizModal
+        isOpen={showQuiz}
+        onClose={() => setShowQuiz(false)}
+        onComplete={handleQuizComplete}
+      />
+      <SurveyModal
+        isOpen={showSurvey}
+        onClose={() => setShowSurvey(false)}
+        onComplete={handleSurveyComplete}
+      />
       <Footer />
     </div>
   );
