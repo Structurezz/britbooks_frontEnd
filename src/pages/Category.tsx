@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Star, X, Filter, ShoppingBag, Eye, Tag, MessageCircle, Truck } from "lucide-react";
-import Footer from "../components/Footer"; // Adjust path as needed
-import TopBar from "../components/Topbar"; // Adjust path as needed
-import { books } from "../data/books"; // Adjust path as needed
+import Footer from "../components/footer"; 
+import TopBar from "../components/Topbar"; 
+import { books } from "../data/books";
 
 // --- CSS for Animations ---
 const styles = `
