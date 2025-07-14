@@ -85,7 +85,7 @@ const AboutUs = () => {
                 Giving used books new life is what we do best. Discover our story, our passion for sustainability, and why BritBooks is the UK’s leading platform for second-hand books.
               </p>
               <Link
-                to="/explore"
+                to="/category"
                 className="mt-6 inline-flex items-center gap-2 bg-red-600 text-white px-6 py-2 rounded-md font-semibold btn-hover-effect"
               >
                 Explore Our Collection

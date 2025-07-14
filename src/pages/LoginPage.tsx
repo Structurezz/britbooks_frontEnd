@@ -118,10 +118,16 @@ const LoginPage = () => {
         <Toaster position="top-right" />
         <div className="bg-white w-full max-w-md p-8 md:p-12 rounded-xl shadow-lg">
           <div className="text-center mb-10">
-            <div className="flex items-center justify-center space-x-2">
-              <div className="bg-red-600 text-white font-bold text-2xl w-12 h-12 flex items-center justify-center rounded-md">B</div>
-              <span className="text-3xl font-bold">BritBooks</span>
-            </div>
+          <div className="flex items-center justify-center">
+  <img
+    src="/logobrit.png"
+    alt="BritBooks Logo"
+    className="w-20 object-contain"
+    style={{ height: "62px" }} // Slightly taller than h-12 (48px)
+  />
+</div>
+
+
           </div>
 
           <form onSubmit={handleSubmit}>
