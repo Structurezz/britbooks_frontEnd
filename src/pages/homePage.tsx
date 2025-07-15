@@ -44,7 +44,7 @@ const BookCard = ({ id, img, title, author, price }) => (
   </div>
 );
 
-// Updated Book Shelf Component with Vertical Grid and Pagination
+// Updated Book Shelf Component with Grid View for Mobile
 const BookShelf = ({ title, books: allBooks }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4; // Adjustable based on design
@@ -85,7 +85,7 @@ const BookShelf = ({ title, books: allBooks }) => {
         </div>
       </div>
       <div className="max-h-[480px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
           {paginatedBooks.map((book, index) => (
             <BookCard key={index} {...book} />
           ))}
@@ -158,8 +158,8 @@ const Homepage = () => {
         <TopBar />
         
         <main className="container mx-auto px-4 sm:px-8">
-          {/* Hero Section with Video Background */}
-          <section className="relative text-white my-4 sm:my-8 py-12 sm:py-20 px-4 sm:px-12 rounded-lg overflow-hidden">
+          {/* Hero Section with Video Background (Visible only on non-mobile) */}
+          <section className="sm:block hidden relative text-white my-4 sm:my-8 py-12 sm:py-20 px-4 sm:px-12 rounded-lg overflow-hidden">
             <video
               autoPlay
               muted
