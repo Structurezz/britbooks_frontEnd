@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import TopBar from "../components/Topbar";
@@ -127,6 +127,8 @@ const BestsellersPage = () => {
 
   const handlePageChange = (page) => {
     if (page > 0 && page <= totalPages) setCurrentPage(page);
+ 
+  
   };
 
   const visiblePages = useMemo(() => {
@@ -191,7 +193,7 @@ const BestsellersPage = () => {
         <section className="py-6 sm:py-10 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <h2 className="text-xl sm:text-3xl font-bold text-gray-800 mb-4 animate-on-scroll">This Week's Top 100</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {paginatedBooks.map((book, index) => (
                 <BookCard
                   key={book.id}

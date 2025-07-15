@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Link } from 'react-router-dom';
 import { Star, ChevronLeft, ChevronRight, Search, Gift, Book, Clock } from "lucide-react";
@@ -34,7 +33,7 @@ const BookCard = ({ img, title, author, price, rating, id, originalPrice }) => {
           <img
             src={img}
             alt={title}
-            className="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-40 sm:h-56 object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </Link>
         <div className="absolute top-2 right-2 bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded-full">
@@ -42,25 +41,25 @@ const BookCard = ({ img, title, author, price, rating, id, originalPrice }) => {
         </div>
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
           <Link to={`/browse/${id}`}>
-            <button className="bg-white text-gray-900 px-4 py-2 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300 hover:bg-gray-200">
+            <button className="bg-white text-gray-900 px-2 sm:px-4 py-1 sm:py-2 rounded-md text-xs sm:text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300 hover:bg-gray-200">
               QUICK VIEW
             </button>
           </Link>
         </div>
       </div>
-      <div className="p-4 flex flex-col flex-grow items-center text-center">
-        <h4 className="font-semibold text-sm text-gray-800 h-10 leading-5 mb-1 line-clamp-2">{title}</h4>
-        <p className="text-xs text-gray-500 mb-2">{author}</p>
-        <div className="mb-2">
-          <StarRating rating={rating} />
+      <div className="p-2 sm:p-4 flex flex-col flex-grow items-center text-center">
+        <h4 className="font-semibold text-xs sm:text-sm text-gray-800 h-10 leading-5 mb-1 sm:mb-1 line-clamp-2">{title}</h4>
+        <p className="text-xs text-gray-500 mb-1 sm:mb-2">{author}</p>
+        <div className="mb-1 sm:mb-2">
+          <StarRating rating={rating} starSize={12} />
         </div>
-        <div className="flex items-center gap-2 mt-auto mb-3">
-          <p className="text-xl font-bold text-red-600">£{numericPrice.toFixed(2)}</p>
-          <p className="text-gray-400 line-through text-sm">£{numericOriginalPrice.toFixed(2)}</p>
+        <div className="flex items-center gap-2 mt-auto mb-2 sm:mb-3">
+          <p className="text-base sm:text-xl font-bold text-red-600">£{numericPrice.toFixed(2)}</p>
+          <p className="text-gray-400 line-through text-xs sm:text-sm">£{numericOriginalPrice.toFixed(2)}</p>
         </div>
         <button
           onClick={() => alert(`${title} added to your basket!`)}
-          className="w-full bg-red-600 text-white font-bold py-2 rounded-md hover:bg-red-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          className="w-full bg-red-600 text-white font-bold py-1 sm:py-2 rounded-md hover:bg-red-700 transition-colors text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
         >
           ADD TO BASKET
         </button>
@@ -171,13 +170,14 @@ const SurveyModal = ({ isOpen, onClose, onComplete }) => {
 
 const ClearancePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setData] = useState('discount');
+  const [sortBy, setSortBy] = useState('discount'); // Fixed variable name from setData to setSortBy
   const [currentPage, setCurrentPage] = useState(1);
   const [showQuiz, setShowQuiz] = useState(false);
   const [showSurvey, setShowSurvey] = useState(false);
   const [points, setPoints] = useState(0);
   const [showReward, setShowReward] = useState(false);
   const BOOKS_PER_PAGE = 12;
+  const gridRef = useRef(null); // Reference to the book grid container
 
   const clearanceBooks = useMemo(() => books.map(book => ({
     ...book,
@@ -209,6 +209,16 @@ const ClearancePage = () => {
     (currentPage - 1) * BOOKS_PER_PAGE,
     currentPage * BOOKS_PER_PAGE
   );
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+      // Scroll to the top of the book grid
+      if (gridRef.current) {
+        gridRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
 
   const handleQuizComplete = (answers) => {
     setPoints(points + 50);
@@ -288,7 +298,7 @@ const ClearancePage = () => {
           )}
 
           {paginatedBooks.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div ref={gridRef} className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {paginatedBooks.map((book) => (
                 <BookCard
                   key={book.id}
@@ -305,7 +315,7 @@ const ClearancePage = () => {
 
           <div className="flex justify-center items-center mt-10 space-x-2">
             <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
               disabled={currentPage === 1}
               className="p-2 border rounded-full disabled:opacity-50 text-gray-700 hover:bg-gray-100 transition-colors"
             >
@@ -315,7 +325,7 @@ const ClearancePage = () => {
               Page {currentPage} of {totalPages}
             </span>
             <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
               disabled={currentPage === totalPages}
               className="p-2 border rounded-full disabled:opacity-50 text-gray-700 hover:bg-gray-100 transition-colors"
             >

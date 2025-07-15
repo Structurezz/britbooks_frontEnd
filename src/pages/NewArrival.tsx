@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import Footer from "../components/footer";
 import TopBar from "../components/Topbar";
@@ -43,32 +43,32 @@ const StarRating = ({ rating, starSize = 16 }) => (
 const BookCard = ({ book }) => {
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 group flex flex-col overflow-hidden">
-      <div className="relative bg-gray-100 p-3 flex-shrink-0">
+      <div className="relative bg-gray-100 p-2 sm:p-3 flex-shrink-0">
         <Link to={`/browse/${book.id}`} className="block">
           <img
             src={book.imageUrl}
             alt={book.title}
-            className="w-full h-48 object-cover mx-auto transition-transform duration-300 group-hover:scale-105 rounded-t-lg"
+            className="w-full h-40 sm:h-48 object-cover mx-auto transition-transform duration-300 group-hover:scale-105 rounded-t-lg"
           />
         </Link>
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
           <Link to={`/browse/${book.id}`}>
-            <button className="bg-red-600 text-white px-3 py-1 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300 hover:bg-red-700">
+            <button className="bg-red-600 text-white px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300 hover:bg-red-700">
               QUICK VIEW
             </button>
           </Link>
         </div>
       </div>
-      <div className="p-3 flex flex-col flex-grow items-center">
-        <h4 className="font-semibold text-sm text-gray-800 h-12 leading-6 mb-2 line-clamp-2">{book.title}</h4>
-        <p className="text-xs text-gray-500 mb-2">{book.author}</p>
-        <div className="mb-2">
-          <StarRating rating={book.rating || 0} />
+      <div className="p-2 sm:p-3 flex flex-col flex-grow items-center">
+        <h4 className="font-semibold text-xs sm:text-sm text-gray-800 h-10 sm:h-12 leading-5 sm:leading-6 mb-1 sm:mb-2 line-clamp-2">{book.title}</h4>
+        <p className="text-xs text-gray-500 mb-1 sm:mb-2">{book.author}</p>
+        <div className="mb-1 sm:mb-2">
+          <StarRating rating={book.rating || 0} starSize={12} />
         </div>
-        <p className="text-lg font-bold text-gray-900 mt-auto mb-3">£{book.price.toFixed(2)}</p>
+        <p className="text-base sm:text-lg font-bold text-gray-900 mt-auto mb-2 sm:mb-3">£{book.price.toFixed(2)}</p>
         <button
           onClick={() => alert(`${book.title} added to your basket!`)}
-          className="w-full bg-red-600 text-white font-medium py-1.5 rounded-md hover:bg-red-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="w-full bg-red-600 text-white font-medium py-1 sm:py-1.5 rounded-md hover:bg-red-700 transition-colors text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
         >
           ADD TO BASKET
         </button>
@@ -115,7 +115,8 @@ const whyShopPoints = [
 const NewArrivalsPage = () => {
   const [cart, setCart] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12; // Modern default, adjustable
+  const [itemsPerPage, setItemsPerPage] = useState(12); // Modern default, adjustable
+  const gridRef = useRef(null); // Reference to the grid section
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -139,7 +140,7 @@ const NewArrivalsPage = () => {
 
   const isRecentRelease = (releaseDate) => {
     const release = new Date(releaseDate);
-    const today = new Date("2025-07-13"); // Updated to current date
+    const today = new Date("2025-07-15"); // Updated to current date
     const diffDays = (today - release) / (1000 * 60 * 60 * 24);
     return diffDays <= 7;
   };
@@ -164,7 +165,13 @@ const NewArrivalsPage = () => {
   const totalPages = Math.ceil(newBooks.length / itemsPerPage);
 
   const handlePageChange = (page) => {
-    if (page > 0 && page <= totalPages) setCurrentPage(page);
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+      // Scroll to the top of the grid section
+      if (gridRef.current) {
+        gridRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }
   };
 
   const visiblePages = useMemo(() => {
@@ -256,7 +263,7 @@ const NewArrivalsPage = () => {
         <section className="py-8 sm:py-10 bg-white">
           <div className="container mx-auto px-4 sm:px-8">
             <h2 className="text-xl font-bold text-gray-800 mb-6 animate-on-scroll">Featured Books</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 animate-on-scroll">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 animate-on-scroll">
               {featuredBooks.map((book) => (
                 <div
                   key={book.id}
@@ -267,7 +274,7 @@ const NewArrivalsPage = () => {
                       <img
                         src={book.imageUrl}
                         alt={book.title}
-                        className="w-full h-48 object-cover"
+                        className="w-full h-40 sm:h-48 object-cover"
                       />
                     </Link>
                     <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
@@ -275,24 +282,24 @@ const NewArrivalsPage = () => {
                     </div>
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
                       <Link to={`/browse/${book.id}`}>
-                        <button className="bg-red-600 text-white px-3 py-1 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300 hover:bg-red-700">
+                        <button className="bg-red-600 text-white px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300 hover:bg-red-700">
                           QUICK VIEW
                         </button>
                       </Link>
                     </div>
                   </div>
-                  <div className="p-4 flex flex-col items-center">
-                    <h4 className="font-semibold text-sm text-gray-800 h-12 leading-5 mb-1 text-center line-clamp-2">
+                  <div className="p-2 sm:p-4 flex flex-col items-center">
+                    <h4 className="font-semibold text-xs sm:text-sm text-gray-800 h-10 sm:h-12 leading-5 sm:leading-5 mb-1 text-center line-clamp-2">
                       {book.title}
                     </h4>
-                    <p className="text-xs text-gray-500 mb-2 text-center">{book.author}</p>
-                    <div className="mb-2">
-                      <StarRating rating={book.rating || 0} />
+                    <p className="text-xs text-gray-500 mb-1 sm:mb-2 text-center">{book.author}</p>
+                    <div className="mb-1 sm:mb-2">
+                      <StarRating rating={book.rating || 0} starSize={12} />
                     </div>
-                    <p className="text-lg font-bold text-gray-900 mb-1">£{book.price.toFixed(2)}</p>
+                    <p className="text-base sm:text-lg font-bold text-gray-900 mb-1">£{book.price.toFixed(2)}</p>
                     <button
                       onClick={() => handleAddToCart(book)}
-                      className="w-full bg-red-600 text-white font-medium py-2 rounded-md hover:bg-red-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full bg-red-600 text-white font-medium py-1 sm:py-2 rounded-md hover:bg-red-700 transition-colors text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                     >
                       ADD TO BASKET
                     </button>
@@ -323,7 +330,7 @@ const NewArrivalsPage = () => {
         </section>
 
         {/* Grid of New Arrivals */}
-        <section className="py-8 sm:py-10 bg-white">
+        <section className="py-8 sm:py-10 bg-white" ref={gridRef}>
           <div className="container mx-auto px-4 sm:px-8">
             <div className="flex flex-wrap justify-between items-center border-b border-gray-200 py-3 mb-6">
               <div className="flex items-center space-x-3">
@@ -348,6 +355,9 @@ const NewArrivalsPage = () => {
                     const newItemsPerPage = parseInt(e.target.value);
                     setItemsPerPage(newItemsPerPage);
                     setCurrentPage(1);
+                    if (gridRef.current) {
+                      gridRef.current.scrollIntoView({ behavior: "smooth" });
+                    }
                   }}
                 >
                   <option value="12">12</option>
@@ -357,7 +367,7 @@ const NewArrivalsPage = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {currentBooks.map((book) => (
                 <BookCard key={book.id} book={book} />
               ))}
@@ -367,36 +377,41 @@ const NewArrivalsPage = () => {
             )}
 
             {newBooks.length > itemsPerPage && (
-              <div className="mt-6 flex justify-center items-center space-x-2">
+              <div className="mt-6 flex justify-center items-center space-x-2 sm:space-x-3">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-colors text-sm sm:text-base"
                   disabled={currentPage === 1}
                 >
                   Previous
                 </button>
-                {visiblePages.map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={`px-4 py-2 rounded-md ${currentPage === page ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} transition-colors`}
-                  >
-                    {page}
-                  </button>
-                ))}
-                {totalPages > visiblePages[visiblePages.length - 1] && (
-                  <span className="text-gray-500">...</span>
-                )}
+                <span className="text-gray-500 text-sm sm:text-base sm:hidden">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <div className="hidden sm:flex sm:space-x-2">
+                  {visiblePages.map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`px-4 py-2 rounded-md ${currentPage === page ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} transition-colors`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  {totalPages > visiblePages[visiblePages.length - 1] && (
+                    <span className="text-gray-500">...</span>
+                  )}
+                </div>
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-colors text-sm sm:text-base"
                   disabled={currentPage === totalPages}
                 >
                   Next
                 </button>
                 <button
                   onClick={() => handlePageChange(totalPages)}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors ml-2"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm sm:text-base ml-2"
                 >
                   Load More
                 </button>

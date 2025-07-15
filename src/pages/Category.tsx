@@ -29,10 +29,12 @@ const styles = `
 `;
 
 // Inject CSS into the document
-const styleSheet = document.createElement("style");
-styleSheet.type = "text/css";
-styleSheet.innerText = styles;
-document.head.appendChild(styleSheet);
+if (typeof document !== "undefined") {
+  const styleSheet = document.createElement("style");
+  styleSheet.type = "text/css";
+  styleSheet.innerText = styles;
+  document.head.appendChild(styleSheet);
+}
 
 // --- Reusable Components ---
 
@@ -583,6 +585,7 @@ const CategoryMainContent = ({ sortBy, setSortBy }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(40);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const gridRef = useRef(null); // Reference to the book grid container
 
   const filteredBooks = useMemo(() => {
     let filtered = books.filter((book) => {
@@ -617,7 +620,13 @@ const CategoryMainContent = ({ sortBy, setSortBy }) => {
   const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
 
   const handlePageChange = (page) => {
-    if (page > 0 && page <= totalPages) setCurrentPage(page);
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+      // Scroll to the top of the book grid
+      if (gridRef.current) {
+        gridRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }
   };
 
   const visiblePages = useMemo(() => {
@@ -679,6 +688,10 @@ const CategoryMainContent = ({ sortBy, setSortBy }) => {
                   const newItemsPerPage = parseInt(e.target.value);
                   setItemsPerPage(newItemsPerPage);
                   setCurrentPage(1);
+                  // Scroll to the top of the book grid
+                  if (gridRef.current) {
+                    gridRef.current.scrollIntoView({ behavior: "smooth" });
+                  }
                 }}
                 className="border border-gray-300 rounded-md py-1.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-200 hover:bg-gray-100"
               >
@@ -689,7 +702,7 @@ const CategoryMainContent = ({ sortBy, setSortBy }) => {
             </div>
           </div>
 
-          <div className="h-[calc(100vh-300px)] overflow-y-auto pr-2">
+          <div ref={gridRef} className="h-[calc(100vh-300px)] overflow-y-auto pr-2">
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {currentBooks.map((book) => (
                 <BookCard key={book.id} book={book} />
@@ -701,10 +714,37 @@ const CategoryMainContent = ({ sortBy, setSortBy }) => {
           </div>
 
           {filteredBooks.length > itemsPerPage && (
-            <div className="mt-4 sm:mt-6 flex flex-wrap justify-center items-center gap-2 sm:gap-3">
+            <div className="mt-4 sm:mt-6 flex flex-wrap justify-center items-center gap-2 sm:gap-3 sm:hidden">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
-                className="px-3 sm:px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-all duration-300 transform hover:scale-105"
+                className="px-3 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-all duration-300 transform hover:scale-105 text-sm"
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              <span className="text-gray-500 text-sm">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                className="px-3 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-all duration-300 transform hover:scale-105 text-sm"
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                className="px-3 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-all duration-300 transform hover:scale-105 text-sm"
+              >
+                Load More
+              </button>
+            </div>
+          )}
+          {filteredBooks.length > itemsPerPage && (
+            <div className="mt-4 sm:mt-6 hidden sm:flex flex-wrap justify-center items-center gap-2 sm:gap-3">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-all duration-300 transform hover:scale-105"
                 disabled={currentPage === 1}
               >
                 Previous
@@ -713,7 +753,7 @@ const CategoryMainContent = ({ sortBy, setSortBy }) => {
                 <button
                   key={page}
                   onClick={() => handlePageChange(page)}
-                  className={`px-3 sm:px-4 py-2 rounded-full text-sm ${
+                  className={`px-4 py-2 rounded-full text-sm ${
                     currentPage === page ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   } transition-all duration-300 transform hover:scale-105`}
                 >
@@ -723,14 +763,14 @@ const CategoryMainContent = ({ sortBy, setSortBy }) => {
               {totalPages > visiblePages[visiblePages.length - 1] && <span className="text-gray-500 text-sm">...</span>}
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
-                className="px-3 sm:px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-all duration-300 transform hover:scale-105"
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 transition-all duration-300 transform hover:scale-105"
                 disabled={currentPage === totalPages}
               >
                 Next
               </button>
               <button
                 onClick={() => handlePageChange(totalPages)}
-                className="px-3 sm:px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-all duration-300 transform hover:scale-105"
+                className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-all duration-300 transform hover:scale-105"
               >
                 Load More
               </button>

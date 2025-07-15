@@ -282,7 +282,7 @@ const SpecialOffersPage = () => {
           <div className="bg-red-600 text-white rounded-lg shadow-md p-4 mb-4 text-center animate-pulse">
             <p className="text-lg font-semibold">Hurry! Fiction sale ends soon!</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {fictionBooks.map((book) => (
               <BookCard key={book.id} book={book} saleType="Fiction Frenzy" />
             ))}
@@ -295,7 +295,7 @@ const SpecialOffersPage = () => {
           <div className="bg-purple-600 text-white rounded-lg shadow-md p-4 mb-4 text-center animate-pulse">
             <p className="text-lg font-semibold">Grab these fantasy deals before they vanish!</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {fantasyBooks.map((book) => (
               <BookCard key={book.id} book={book} saleType="Fantasy Blowout" />
             ))}
@@ -308,7 +308,7 @@ const SpecialOffersPage = () => {
           <div className="bg-blue-600 text-white rounded-lg shadow-md p-4 mb-4 text-center animate-pulse">
             <p className="text-lg font-semibold">Expand your knowledge with these deals!</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {nonFictionBooks.map((book) => (
               <BookCard key={book.id} book={book} saleType="Non-Fiction Deals" />
             ))}
