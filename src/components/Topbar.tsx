@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/authContext';
-
+import { AuthContext } from "../context/authContext";
 // --- SVG ICONS --- //
 const SearchIcon = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -47,8 +46,10 @@ const XIcon = (props) => (
 
 // --- TOPBAR COMPONENT --- //
 const TopBar = () => {
-  const { user, logout } = useAuth();
-  const location = useLocation();
+  const authContext = React.useContext(AuthContext);
+  const user = authContext?.auth.user;
+  const logout = authContext?.logout;
+    const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const isActive = (path) => location.pathname === path;

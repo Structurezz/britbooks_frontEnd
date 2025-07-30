@@ -1,8 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../context/authContext';
+import { JwtPayload } from '../types/auth';
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 import TopBar from '../components/Topbar';
-import Footer from '../components/footer'; // Assuming Footer is a separate component
+import Footer from '../components/footer';
+
+// API URL consistent with AuthContext
+const API_URL = import.meta.env.VITE_API_URL || 'https://britbooks-api-production.up.railway.app';
 
 // --- SVG ICONS ---
 const XIcon = (props) => (
@@ -21,7 +28,7 @@ const TrashIcon = (props) => (
   </svg>
 );
 
-// --- MOCK DATA ---
+// --- Initial User Data (for fallback) ---
 const initialUserData = {
   name: 'John Doe',
   email: 'john.doe@example.com',
@@ -32,7 +39,7 @@ const initialUserData = {
 };
 
 // --- Account Settings Form Component ---
-const AccountSettingsForm = ({ userData, setUserData }) => {
+const AccountSettingsForm = ({ userData, setUserData, token, logout }) => {
   const [formData, setFormData] = useState({
     ...userData,
     password: '',
@@ -74,7 +81,7 @@ const AccountSettingsForm = ({ userData, setUserData }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
@@ -89,32 +96,61 @@ const AccountSettingsForm = ({ userData, setUserData }) => {
       return;
     }
 
-    // Simulate backend API call
-    const updatedData = {
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      profilePicture: profilePicPreview,
-      is2FAEnabled: formData.is2FAEnabled,
-      notifications: formData.notifications,
-      ...(formData.password && { password: formData.password }),
-    };
-    setUserData(updatedData);
-    setSuccess('Account details updated successfully!');
-    setFormData((prev) => ({ ...prev, password: '', confirmPassword: '' }));
-    // In production: await fetch('/api/user', { method: 'PUT', body: new FormData() with file });
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('fullName', formData.name);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('phoneNumber', formData.phone);
+      if (formData.password) formDataToSend.append('password', formData.password);
+      if (profilePicFile) formDataToSend.append('profilePicture', profilePicFile);
+
+      const response = await axios.put(
+        `${API_URL}/api/users/${userData.userId}`,
+        formDataToSend,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setUserData({
+        userId: response.data._id,
+        name: response.data.fullName,
+        email: response.data.email,
+        phone: response.data.phoneNumber,
+        profilePicture: response.data.profilePicture || profilePicPreview,
+        is2FAEnabled: formData.is2FAEnabled,
+        notifications: formData.notifications,
+      });
+      setSuccess('Account details updated successfully!');
+      setFormData((prev) => ({ ...prev, password: '', confirmPassword: '' }));
+    } catch (err) {
+      console.error('Update user error:', err);
+      setError(err.response?.data?.message || 'Failed to update account details.');
+    }
   };
 
-  const handleLogout = () => {
-    // Simulate logout
-    console.log('User logged out');
-    // In production: await fetch('/api/logout', { method: 'POST' }); window.location.href = '/login';
+  const handleLogout = async () => {
+    try {
+      await axios.post(`${API_URL}/api/auth/logout`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      logout();
+      window.location.href = '/login';
+    } catch (err) {
+      console.error('Logout error:', err);
+      setError('Failed to log out.');
+    }
   };
 
-  const handleDeleteAccount = () => {
-    // Simulate account deletion
-    console.log('Account deleted');
-    // In production: await fetch('/api/user', { method: 'DELETE' }); window.location.href = '/login';
+  const handleDeleteAccount = async () => {
+    try {
+      await axios.delete(`${API_URL}/api/users/${userData.userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      logout();
+      window.location.href = '/login';
+    } catch (err) {
+      console.error('Delete account error:', err);
+      setError('Failed to delete account.');
+    }
   };
 
   return (
@@ -305,6 +341,55 @@ const AccountSettingsForm = ({ userData, setUserData }) => {
 const AccountSettingsPage = () => {
   const [activeLink, setActiveLink] = useState('account');
   const [userData, setUserData] = useState(initialUserData);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const context = useContext(AuthContext);
+
+  if (!context) throw new Error("AuthContext must be used within AuthProvider");
+  const { auth, logout } = context;
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!auth.token) {
+        setError('No authentication token available. Please log in.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const userId = auth.user?.userId || jwtDecode<JwtPayload>(auth.token).userId;
+        if (!userId) {
+          setError('Invalid token: userId not found.');
+          setLoading(false);
+          return;
+        }
+
+        console.log('Fetching user data for userId:', userId);
+        const response = await axios.get(
+          `${API_URL}/api/users/${userId}`,
+          { headers: { Authorization: `Bearer ${auth.token}` } }
+        );
+        console.log('User data response:', response.data);
+
+        setUserData({
+          userId: response.data._id,
+          name: response.data.fullName,
+          email: response.data.email,
+          phone: response.data.phoneNumber || '',
+          profilePicture: response.data.profilePicture || initialUserData.profilePicture,
+          is2FAEnabled: initialUserData.is2FAEnabled,
+          notifications: initialUserData.notifications,
+        });
+        setLoading(false);
+      } catch (err) {
+        console.error('Fetch user data error:', err);
+        setError(err.response?.data?.message || 'Failed to fetch user data.');
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [auth.token, auth.user]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -326,6 +411,25 @@ const AccountSettingsPage = () => {
     };
   }, []);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 font-sans flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 font-sans flex items-center justify-center">
+        <div className="text-red-600">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans flex-col flex">
       <style>{`
@@ -338,9 +442,9 @@ const AccountSettingsPage = () => {
 
       <TopBar />
       <main className="flex-1 p-4 sm:p-8 overflow-y-auto pb-16">
-        <AccountSettingsForm userData={userData} setUserData={setUserData} />
+        <AccountSettingsForm userData={userData} setUserData={setUserData} token={auth.token} logout={logout} />
       </main>
-      <Footer /> {/* Added Footer at the bottom */}
+      <Footer />
     </div>
   );
 };
