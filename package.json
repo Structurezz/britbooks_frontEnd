@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
+    "axios": "^1.11.0",
     "framer-motion": "^12.20.1",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.523.0",
