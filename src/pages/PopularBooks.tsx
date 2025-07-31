@@ -1,9 +1,11 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Star, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 import TopBar from "../components/Topbar";
 import Footer from "../components/footer";
 import { books } from "../data/books";
+import { useCart } from "../context/cartContext";
 
 // --- Reusable Components ---
 
@@ -22,7 +24,21 @@ const StarRating = ({ rating, starSize = 16 }) => (
 
 // Modernized Book Card Component
 const BookCard = ({ img, title, author, price, rating, id }) => {
+  const { addToCart } = useCart();
   const numericPrice = typeof price === 'string' ? parseFloat(price.replace("£", "")) : price;
+
+  const handleAddToCart = () => {
+    addToCart({
+      id,
+      img,
+      title,
+      author,
+      price: `£${numericPrice.toFixed(2)}`,
+      quantity: 1,
+    });
+    toast.success(`${title} added to your basket!`);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 group flex flex-col overflow-hidden transform hover:-translate-y-1">
       <div className="relative">
@@ -49,7 +65,7 @@ const BookCard = ({ img, title, author, price, rating, id }) => {
         </div>
         <p className="text-base sm:text-xl font-bold text-gray-900 mt-auto mb-2 sm:mb-3">£{numericPrice.toFixed(2)}</p>
         <button
-          onClick={() => alert(`${title} added to your basket!`)}
+          onClick={handleAddToCart}
           className="w-full bg-red-600 text-white font-bold py-1 sm:py-2 rounded-md hover:bg-red-700 transition-colors text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
         >
           ADD TO BASKET
@@ -139,6 +155,7 @@ const PopularBooksPage = () => {
         }
         .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; opacity: 0; }
       `}</style>
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <TopBar />
       <main className="flex-1">
         {/* Modern Hero Section */}

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 import TopBar from "../components/Topbar";
 import Footer from "../components/footer";
 import { books } from "../data/books";
+import { useCart } from "../context/cartContext";
 
 // Star Rating Component
 const StarRating = ({ rating, starSize = 16 }) => (
@@ -21,8 +23,21 @@ const StarRating = ({ rating, starSize = 16 }) => (
 
 // Book Card Component
 const BookCard = ({ book, rank }) => {
+  const { addToCart } = useCart();
   const numericPrice = typeof book.price === 'string' ? parseFloat(book.price.replace("£", "")) : book.price;
   const isTopTen = rank <= 10;
+
+  const handleAddToCart = () => {
+    addToCart({
+      id: book.id,
+      img: book.img,
+      title: book.title,
+      author: book.author,
+      price: `£${numericPrice.toFixed(2)}`,
+      quantity: 1,
+    });
+    toast.success(`${book.title} added to your basket!`);
+  };
 
   return (
     <div className={`bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 group flex flex-col overflow-hidden transform hover:-translate-y-1 relative border ${isTopTen ? 'border-yellow-400' : 'border-gray-200'} h-full`}>
@@ -53,7 +68,7 @@ const BookCard = ({ book, rank }) => {
         </div>
         <p className="text-lg font-bold text-gray-900 mt-auto mb-3">£{numericPrice.toFixed(2)}</p>
         <button
-          onClick={() => alert(`${book.title} added to your basket!`)}
+          onClick={handleAddToCart}
           className="w-full bg-red-600 text-white font-medium py-1.5 rounded-md hover:bg-red-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
         >
           ADD TO BASKET
@@ -65,7 +80,6 @@ const BookCard = ({ book, rank }) => {
 
 // Main Bestsellers Page Component
 const BestsellersPage = () => {
-  const [cart, setCart] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const BOOKS_PER_PAGE = 12;
 
@@ -112,23 +126,8 @@ const BestsellersPage = () => {
     };
   }, []);
 
-  const handleAddToCart = (book) => {
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.id === book.id);
-      if (existingItem) {
-        return prevCart.map((item) =>
-          item.id === book.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      return [...prevCart, { ...book, quantity: 1 }];
-    });
-    alert(`${book.title} added to your basket!`);
-  };
-
   const handlePageChange = (page) => {
     if (page > 0 && page <= totalPages) setCurrentPage(page);
- 
-  
   };
 
   const visiblePages = useMemo(() => {
@@ -177,7 +176,7 @@ const BestsellersPage = () => {
           z-index: 2;
         }
       `}</style>
-
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <TopBar />
 
       <main>

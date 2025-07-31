@@ -5,6 +5,8 @@ import TopBar from "../components/Topbar";
 import { Star } from "lucide-react";
 import { Menu, X, SearchIcon, UserCircleIcon, ShoppingCartIcon, BookIcon, CalendarIcon, SparkleIcon } from "lucide-react";
 import { books as baseBooks } from "../data/books";
+import toast, { Toaster } from "react-hot-toast";
+import { useCart } from "../context/cartContext";
 
 // --- SVG ICONS ---
 const TwitterIcon = (props) => (
@@ -41,6 +43,20 @@ const StarRating = ({ rating, starSize = 16 }) => (
 
 // Book Card Component
 const BookCard = ({ book }) => {
+  const { addToCart } = useCart();
+
+  const handleAddToCart = () => {
+    addToCart({
+      id: book.id,
+      img: book.imageUrl,
+      title: book.title,
+      author: book.author,
+      price: `£${book.price.toFixed(2)}`,
+      quantity: 1,
+    });
+    toast.success(`${book.title} added to your basket!`);
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 group flex flex-col overflow-hidden">
       <div className="relative bg-gray-100 p-2 sm:p-3 flex-shrink-0">
@@ -67,7 +83,7 @@ const BookCard = ({ book }) => {
         </div>
         <p className="text-base sm:text-lg font-bold text-gray-900 mt-auto mb-2 sm:mb-3">£{book.price.toFixed(2)}</p>
         <button
-          onClick={() => alert(`${book.title} added to your basket!`)}
+          onClick={handleAddToCart}
           className="w-full bg-red-600 text-white font-medium py-1 sm:py-1.5 rounded-md hover:bg-red-700 transition-colors text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
         >
           ADD TO BASKET
@@ -83,7 +99,7 @@ const generateNewBooks = () => {
   for (let i = 0; i < 6; i++) { // 6 iterations to reach ~120 books (20 * 6 = 120)
     baseBooks.forEach((book, index) => {
       books.push({
-        id: i * 20 + index + 1,
+        id: String(i * 20 + index + 1),
         title: `${book.title} ${i + 1}`,
         author: book.author,
         price: book.price + (i * 0.5),
@@ -113,7 +129,7 @@ const whyShopPoints = [
 
 // --- Main New Arrivals Page Component ---
 const NewArrivalsPage = () => {
-  const [cart, setCart] = useState([]);
+  const { addToCart } = useCart();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12); // Modern default, adjustable
   const gridRef = useRef(null); // Reference to the grid section
@@ -140,22 +156,9 @@ const NewArrivalsPage = () => {
 
   const isRecentRelease = (releaseDate) => {
     const release = new Date(releaseDate);
-    const today = new Date("2025-07-15"); // Updated to current date
+    const today = new Date("2025-07-31"); // Updated to current date
     const diffDays = (today - release) / (1000 * 60 * 60 * 24);
     return diffDays <= 7;
-  };
-
-  const handleAddToCart = (book) => {
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.id === book.id);
-      if (existingItem) {
-        return prevCart.map((item) =>
-          item.id === book.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      return [...prevCart, { ...book, quantity: 1 }];
-    });
-    alert(`${book.title} added to your basket!`);
   };
 
   // Pagination logic
@@ -243,6 +246,7 @@ const NewArrivalsPage = () => {
         .card-hover:hover { transform: translateY(-3px); box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1); }
       `}</style>
 
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <TopBar />
 
       <main>
@@ -298,7 +302,17 @@ const NewArrivalsPage = () => {
                     </div>
                     <p className="text-base sm:text-lg font-bold text-gray-900 mb-1">£{book.price.toFixed(2)}</p>
                     <button
-                      onClick={() => handleAddToCart(book)}
+                      onClick={() => {
+                        addToCart({
+                          id: book.id,
+                          img: book.imageUrl,
+                          title: book.title,
+                          author: book.author,
+                          price: `£${book.price.toFixed(2)}`,
+                          quantity: 1,
+                        });
+                        toast.success(`${book.title} added to your basket!`);
+                      }}
                       className="w-full bg-red-600 text-white font-medium py-1 sm:py-2 rounded-md hover:bg-red-700 transition-colors text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                     >
                       ADD TO BASKET

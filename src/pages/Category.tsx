@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Star, X, Filter, ShoppingBag, Eye, Tag, MessageCircle, Truck } from "lucide-react";
-import Footer from "../components/footer"; 
-import TopBar from "../components/Topbar"; 
+import toast, { Toaster } from "react-hot-toast";
+import { useCart } from "../context/cartContext";
+import Footer from "../components/footer";
+import TopBar from "../components/Topbar";
 import { books } from "../data/books";
 
 // --- CSS for Animations ---
@@ -53,40 +55,56 @@ const StarRating = ({ rating, starSize = 16 }) => (
 );
 
 // Book Card Component
-const BookCard = ({ book }) => (
-  <div className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 group flex flex-col overflow-hidden">
-    <div className="relative bg-gray-100 p-4 flex-shrink-0">
-      <Link to={`/browse/${book.id}`} className="block">
-        <img
-          src={book.imageUrl}
-          alt={book.title}
-          className="w-full h-48 object-cover mx-auto transition-transform duration-300 group-hover:scale-105 rounded-t-lg"
-        />
-      </Link>
-      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-        <Link to={`/browse/${book.id}`}>
-          <button className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300 hover:bg-red-700">
-            QUICK VIEW
-          </button>
+const BookCard = ({ book }) => {
+  const { addToCart } = useCart();
+
+  const handleAddToCart = () => {
+    addToCart({
+      id: book.id,
+      img: book.imageUrl,
+      title: book.title,
+      author: book.author,
+      price: `£${book.price.toFixed(2)}`,
+      quantity: 1,
+    });
+    toast.success(`${book.title} added to your basket!`);
+  };
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 group flex flex-col overflow-hidden">
+      <div className="relative bg-gray-100 p-4 flex-shrink-0">
+        <Link to={`/browse/${book.id}`} className="block">
+          <img
+            src={book.imageUrl}
+            alt={book.title}
+            className="w-full h-48 object-cover mx-auto transition-transform duration-300 group-hover:scale-105 rounded-t-lg"
+          />
         </Link>
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+          <Link to={`/browse/${book.id}`}>
+            <button className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300 hover:bg-red-700">
+              QUICK VIEW
+            </button>
+          </Link>
+        </div>
+      </div>
+      <div className="p-4 flex flex-col flex-grow items-center">
+        <h4 className="font-semibold text-sm text-gray-800 h-12 leading-6 mb-2 line-clamp-2">{book.title}</h4>
+        <p className="text-xs text-gray-500 mb-2">{book.author}</p>
+        <div className="mb-2">
+          <StarRating rating={book.rating} />
+        </div>
+        <p className="text-lg font-bold text-gray-900 mt-auto mb-3">£{book.price.toFixed(2)}</p>
+        <button
+          onClick={handleAddToCart}
+          className="w-full bg-red-600 text-white font-medium py-2 rounded-md hover:bg-red-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+        >
+          ADD TO BASKET
+        </button>
       </div>
     </div>
-    <div className="p-4 flex flex-col flex-grow items-center">
-      <h4 className="font-semibold text-sm text-gray-800 h-12 leading-6 mb-2 line-clamp-2">{book.title}</h4>
-      <p className="text-xs text-gray-500 mb-2">{book.author}</p>
-      <div className="mb-2">
-        <StarRating rating={book.rating} />
-      </div>
-      <p className="text-lg font-bold text-gray-900 mt-auto mb-3">£{book.price.toFixed(2)}</p>
-      <button
-        onClick={() => alert(`${book.title} added to your basket!`)}
-        className="w-full bg-red-600 text-white font-medium py-2 rounded-md hover:bg-red-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-      >
-        ADD TO BASKET
-      </button>
-    </div>
-  </div>
-);
+  );
+};
 
 // Live Purchase Updates Component
 const LivePurchaseUpdates = ({ updates }) => (
@@ -788,6 +806,7 @@ const CategoryBrowsePage = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <TopBar />
       <CategoryMainContent sortBy={sortBy} setSortBy={setSortBy} />
       <Footer />

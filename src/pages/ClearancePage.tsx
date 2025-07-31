@@ -2,9 +2,11 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Link } from 'react-router-dom';
 import { Star, ChevronLeft, ChevronRight, Search, Gift, Book, Clock } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 import TopBar from '../components/Topbar';
 import Footer from '../components/footer';
 import { books } from '../data/books';
+import { useCart } from "../context/cartContext";
 
 // --- Reusable Components ---
 
@@ -22,9 +24,22 @@ const StarRating = ({ rating, starSize = 16 }) => (
 );
 
 const BookCard = ({ img, title, author, price, rating, id, originalPrice }) => {
+  const { addToCart } = useCart();
   const numericPrice = typeof price === 'string' ? parseFloat(price.replace("£", "")) : price;
   const numericOriginalPrice = typeof originalPrice === 'string' ? parseFloat(originalPrice.replace("£", "")) : originalPrice;
   const discount = Math.round(((numericOriginalPrice - numericPrice) / numericOriginalPrice) * 100);
+
+  const handleAddToCart = () => {
+    addToCart({
+      id,
+      img,
+      title,
+      author,
+      price: `£${numericPrice.toFixed(2)}`,
+      quantity: 1,
+    });
+    toast.success(`${title} added to your basket!`);
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-2xl transition-all duration-300 group flex flex-col overflow-hidden transform hover:-translate-y-1">
@@ -58,7 +73,7 @@ const BookCard = ({ img, title, author, price, rating, id, originalPrice }) => {
           <p className="text-gray-400 line-through text-xs sm:text-sm">£{numericOriginalPrice.toFixed(2)}</p>
         </div>
         <button
-          onClick={() => alert(`${title} added to your basket!`)}
+          onClick={handleAddToCart}
           className="w-full bg-red-600 text-white font-bold py-1 sm:py-2 rounded-md hover:bg-red-700 transition-colors text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
         >
           ADD TO BASKET
@@ -170,14 +185,14 @@ const SurveyModal = ({ isOpen, onClose, onComplete }) => {
 
 const ClearancePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('discount'); // Fixed variable name from setData to setSortBy
+  const [sortBy, setSortBy] = useState('discount');
   const [currentPage, setCurrentPage] = useState(1);
   const [showQuiz, setShowQuiz] = useState(false);
   const [showSurvey, setShowSurvey] = useState(false);
   const [points, setPoints] = useState(0);
   const [showReward, setShowReward] = useState(false);
   const BOOKS_PER_PAGE = 12;
-  const gridRef = useRef(null); // Reference to the book grid container
+  const gridRef = useRef(null);
 
   const clearanceBooks = useMemo(() => books.map(book => ({
     ...book,
@@ -213,7 +228,6 @@ const ClearancePage = () => {
   const handlePageChange = (page) => {
     if (page > 0 && page <= totalPages) {
       setCurrentPage(page);
-      // Scroll to the top of the book grid
       if (gridRef.current) {
         gridRef.current.scrollIntoView({ behavior: "smooth" });
       }
@@ -236,6 +250,7 @@ const ClearancePage = () => {
 
   return (
     <div className="bg-slate-50 min-h-screen flex flex-col font-sans">
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <TopBar />
       <main className="flex-1">
         <div className="bg-gradient-to-br from-red-600 to-red-800 text-white text-center py-12 md:py-10 px-4">
