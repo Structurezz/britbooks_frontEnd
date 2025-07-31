@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import axios, { AxiosError } from "axios";
+import { jwtDecode } from 'jwt-decode';
 
 interface AuthState {
   user: { userId: string; fullName: string; email: string; role: string } | null;
@@ -77,6 +78,7 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const API_BASE_URL = "https://britbooks-api-production.up.railway.app/api/auth";
+const API_USERS_URL = "https://britbooks-api-production.up.railway.app/api/users";
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [auth, setAuth] = useState<AuthState>({
@@ -86,6 +88,57 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     error: null,
     isVerified: false,
   });
+
+  // Restore auth state from localStorage on mount
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const storedToken = localStorage.getItem('authToken');
+      const storedUser = localStorage.getItem('authUser');
+
+      if (storedToken && storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          const decoded = jwtDecode<{ userId: string }>(storedToken);
+          
+          // Validate token by fetching user data
+          setAuth((prev) => ({ ...prev, loading: true }));
+          const response = await axios.get(
+            `${API_USERS_URL}/${decoded.userId}`,
+            { headers: { Authorization: `Bearer ${storedToken}` } }
+          );
+
+          setAuth({
+            user: {
+              userId: response.data._id,
+              fullName: response.data.fullName,
+              email: response.data.email,
+              role: response.data.role,
+            },
+            token: storedToken,
+            loading: false,
+            error: null,
+            isVerified: response.data.isVerified,
+          });
+          console.log('Restored auth state:', { user: response.data, token: storedToken });
+        } catch (error) {
+          console.error('Token validation error:', error);
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authUser');
+          setAuth({
+            user: null,
+            token: null,
+            loading: false,
+            error: 'Invalid or expired token. Please log in again.',
+            isVerified: false,
+          });
+        }
+      } else {
+        setAuth((prev) => ({ ...prev, loading: false }));
+      }
+    };
+
+    initializeAuth();
+  }, []);
 
   const registerUser = async (formData: RegisterFormData) => {
     setAuth((prev) => ({ ...prev, loading: true, error: null }));
@@ -98,6 +151,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setAuth((prev) => ({ ...prev, loading: false, error: "No token returned from server" }));
         return;
       }
+      localStorage.setItem('authToken', response.data.token);
+      localStorage.setItem('authUser', JSON.stringify(response.data.user));
       setAuth((prev) => ({
         ...prev,
         loading: false,
@@ -128,6 +183,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setAuth((prev) => ({ ...prev, loading: false, error: "No token returned from server" }));
         return;
       }
+      localStorage.setItem('authToken', response.data.token);
+      // User data not available yet, will be set after verifyLogin
       setAuth((prev) => ({
         ...prev,
         loading: false,
@@ -161,10 +218,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         { headers: { Authorization: `Bearer ${auth.token}` } }
       );
       console.log("Registration verification response:", response.data);
+      localStorage.setItem('authToken', response.data.token);
+      localStorage.setItem('authUser', JSON.stringify({
+        userId: response.data.user.userId,
+        fullName: response.data.user.fullName,
+        email: response.data.user.email,
+        role: response.data.user.role,
+      }));
       setAuth((prev) => ({
         ...prev,
         loading: false,
-        user: response.data.user,
+        user: {
+          userId: response.data.user.userId,
+          fullName: response.data.user.fullName,
+          email: response.data.user.email,
+          role: response.data.user.role,
+        },
         token: response.data.token,
         isVerified: response.data.user.isVerified,
         error: null,
@@ -195,10 +264,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         { headers: { Authorization: `Bearer ${auth.token}` } }
       );
       console.log("Login verification response:", response.data);
+      localStorage.setItem('authToken', response.data.token);
+      localStorage.setItem('authUser', JSON.stringify({
+        userId: response.data.user.userId,
+        fullName: response.data.user.fullName,
+        email: response.data.user.email,
+        role: response.data.user.role,
+      }));
       setAuth((prev) => ({
         ...prev,
         loading: false,
-        user: response.data.user,
+        user: {
+          userId: response.data.user.userId,
+          fullName: response.data.user.fullName,
+          email: response.data.user.email,
+          role: response.data.user.role,
+        },
         token: response.data.token,
         isVerified: response.data.user.isVerified,
         error: null,
@@ -216,6 +297,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     console.log("Logging out - resetting auth state");
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('authUser');
     setAuth({
       user: null,
       token: null,
