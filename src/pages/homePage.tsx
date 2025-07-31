@@ -183,7 +183,7 @@ const Homepage = () => {
               className="absolute inset-0 w-full h-full object-cover rounded-lg"
             >
               <source
-                src="https://media.istockphoto.com/id/1309243817/video/laptop-on-a-table-at-the-end-of-an-aisle-of-books-in-a-library.mp4?s=mp4-640x640-is&k=20&c=HERTtG3ibKF0poAWZ8NrgIPbph1408m0jYwVOhS8mIM="
+                src="https://media.istockphoto.com/id/1302273587/video/laptop-on-a-table-at-the-end-of-an-aisle-of-books-in-a-library.mp4?s=mp4-640x640-is&k=20&c=HERTtG3ibKF0poAWZ8NrgIPbph1408m0jYwVOhS8mIM="
                 type="video/mp4"
               />
               Your browser does not support the video tag.
