@@ -2,8 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { addToCart } from "../../redux/cartSlice";
 import TopBar from "../components/Topbar";
 import Footer from "../components/footer";
 import {
@@ -15,15 +13,11 @@ import {
   ChevronRight,
   ShoppingCart,
 } from "lucide-react";
+import { books } from "../data/books";
+import toast, { Toaster } from "react-hot-toast";
+import { useCart } from "../context/cartContext";
 
-// --- UPDATED IMPORT ---
-// Now importing the 'books' array from your new 'book.tsx' file.
-// Ensure the path './book.tsx' is correct relative to this component file.
-import { books } from "../data/books"; // 👈 Changed from "../data/books"
-
-// --- (No changes to sub-components) ---
-
-// Star Icon Component
+// --- SVG ICONS ---
 const StarIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -41,46 +35,69 @@ const StarIcon = () => (
 );
 
 // Book Card Component
-const BookCard = ({ id, img, title, author, price }) => (
-  <div className="group relative flex-shrink-0 w-[180px] text-left p-2">
-    <img
-      src={img}
-      alt={title}
-      className="w-full h-48 object-cover mb-2 rounded-md"
-    />
-    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-      <a href={`/browse/${id}`}>
-        <button className="bg-red-600 text-white px-3 py-1 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300 hover:bg-red-700">
-          QUICK VIEW
-        </button>
-      </a>
-    </div>
-    <h3 className="font-semibold text-sm truncate mt-1">{title}</h3>
-    <p className="text-gray-500 text-xs mb-1">{author}</p>
-    <div className="flex items-center text-gray-300 mb-1">
-      {[...Array(5)].map((_, i) => (
-        <svg
-          key={i}
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className={i < Math.round(4) ? "text-yellow-400" : "text-gray-300"}
+const BookCard = ({ id, img, title, author, price }) => {
+  const { addToCart } = useCart();
+  const numericPrice = typeof price === 'string' ? parseFloat(price.replace("£", "")) : price;
+
+  const handleAddToCart = () => {
+    addToCart({
+      id,
+      imageUrl: img,
+      title,
+      author,
+      price: `£${numericPrice.toFixed(2)}`,
+      quantity: 1,
+    });
+    toast.success(`${title} added to your basket!`);
+  };
+
+  return (
+    <div className="group relative flex-shrink-0 w-[180px] text-left p-2">
+      <div className="relative">
+        <a href={`/browse/${id}`}>
+          <img
+            src={img}
+            alt={title}
+            className="w-full h-48 object-cover mb-2 rounded-md transition-transform duration-300 group-hover:scale-105"
+          />
+        </a>
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
+          <a href={`/browse/${id}`}>
+            <button className="bg-white text-gray-900 px-2 sm:px-4 py-1 sm:py-2 rounded-md text-xs sm:text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300 hover:bg-gray-200">
+              QUICK VIEW
+            </button>
+          </a>
+        </div>
+      </div>
+      <div className="p-2 flex flex-col items-start">
+        <h3 className="font-semibold text-sm truncate mt-1">{title}</h3>
+        <p className="text-gray-500 text-xs mb-1">{author}</p>
+        <div className="flex items-center text-gray-300 mb-1">
+          {[...Array(5)].map((_, i) => (
+            <svg
+              key={i}
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className={i < Math.round(4) ? "text-yellow-400" : "text-gray-300"}
+            >
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+          ))}
+        </div>
+        <p className="text-lg font-bold text-gray-900">£{numericPrice.toFixed(2)}</p>
+        <button
+          onClick={handleAddToCart}
+          className="bg-red-600 text-white font-medium px-3 py-1 rounded-md text-xs w-full transition-colors hover:bg-red-700 mt-2"
         >
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-      ))}
+          ADD TO BASKET
+        </button>
+      </div>
     </div>
-    <p className="text-lg font-bold text-gray-900">£{price.toFixed(2)}</p>
-    <button
-      onClick={() => alert(`${title} added to your basket!`)}
-      className="bg-red-600 text-white font-medium px-3 py-1 rounded-md text-xs w-full transition-colors hover:bg-red-700 mt-2"
-    >
-      ADD TO BASKET
-    </button>
-  </div>
-);
+  );
+};
 
 // BookShelf Component with Pagination
 const BookShelf = ({ title, books }) => {
@@ -141,11 +158,10 @@ const BookShelf = ({ title, books }) => {
   );
 };
 
-
 // --- Main Component ---
 const BrowseCategoryDetail = () => {
   const { id } = useParams();
-  const dispatch = useDispatch();
+  const { addToCart } = useCart();
   const book = books.find((b) => b.id === Number(id));
 
   const [quantity, setQuantity] = useState(1);
@@ -156,8 +172,15 @@ const BrowseCategoryDetail = () => {
   }
 
   const handleAddToCart = () => {
-    dispatch(addToCart({ ...book, quantity }));
-    alert(`${quantity} x ${book.title} added to cart!`);
+    addToCart({
+      id: book.id,
+      imageUrl: book.imageUrl,
+      title: book.title,
+      author: book.author,
+      price: `£${book.price.toFixed(2)}`,
+      quantity: quantity,
+    });
+    toast.success(`${quantity} x ${book.title} added to your basket!`);
   };
 
   // This logic now uses the imported books from book.tsx
@@ -167,6 +190,7 @@ const BrowseCategoryDetail = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <TopBar />
       <main className="container mx-auto px-4 sm:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

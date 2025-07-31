@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import Footer from "../components/footer";
 import TopBar from "../components/Topbar";
 import { books as realBooks } from "../data/books";
+import toast, { Toaster } from "react-hot-toast";
+import { useCart } from "../context/cartContext";
 
 // --- SVG ICONS ---
 const StarIcon = (props) => (
@@ -84,7 +86,7 @@ const campaignAds = [
 
 // --- Component ---
 const SpecialOffersPage = () => {
-  const [cart, setCart] = useState([]);
+  const { addToCart, cart } = useCart();
   const [fictionTimer, setFictionTimer] = useState(24 * 60 * 60); // 24 hours
   const [fantasyTimer, setFantasyTimer] = useState(12 * 60 * 60); // 12 hours
   const [nonFictionTimer, setNonFictionTimer] = useState(6 * 60 * 60); // 6 hours
@@ -140,24 +142,19 @@ const SpecialOffersPage = () => {
   };
 
   const handleAddToCart = (book) => {
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.id === book.id);
-      if (existingItem) {
-        return prevCart.map((item) =>
-          item.id === book.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      return [...prevCart, { ...book, quantity: 1 }];
+    addToCart({
+      id: book.id,
+      imageUrl: book.imageUrl,
+      title: book.title,
+      author: book.author,
+      price: `£${book.discountPrice.toFixed(2)}`,
+      quantity: 1,
     });
-    const toast = document.createElement("div");
-    toast.className = "fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-md shadow-lg animate-fade-in-up";
-    toast.textContent = `${book.title} added to cart!`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
+    toast.success(`${book.title} added to your basket!`);
   };
 
   // Free shipping quest progress
-  const cartItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const cartItemsCount = (cart || []).reduce((sum, item) => sum + item.quantity, 0);
   const questComplete = cartItemsCount >= 4;
 
   // Book Card Component
@@ -213,6 +210,7 @@ const SpecialOffersPage = () => {
 
   return (
     <div className="bg-gray-50 font-sans min-h-screen">
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <TopBar />
 
       <header className="relative text-white py-12 overflow-hidden">
