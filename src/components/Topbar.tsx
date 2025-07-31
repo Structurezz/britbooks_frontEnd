@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { AuthContext } from "../context/authContext";
+import { AuthContext } from '../context/authContext';
+import { useCart } from '../context/cartContext';
+
 // --- SVG ICONS --- //
 const SearchIcon = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -47,9 +49,10 @@ const XIcon = (props) => (
 // --- TOPBAR COMPONENT --- //
 const TopBar = () => {
   const authContext = React.useContext(AuthContext);
+  const { cartCount } = useCart();
   const user = authContext?.auth.user;
   const logout = authContext?.logout;
-    const location = useLocation();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const isActive = (path) => location.pathname === path;
@@ -83,7 +86,7 @@ const TopBar = () => {
         </Link>
         <Link to="/checkout" className="p-2 relative">
           <ShoppingCartIcon className="h-6 w-6 text-red-500" />
-          <span className="absolute top-0 right-0 block h-4 w-4 rounded-full bg-red-500 text-white text-xs text-center">0</span>
+          <span className="absolute top-0 right-0 block h-4 w-4 rounded-full bg-red-500 text-white text-xs text-center">{cartCount}</span>
         </Link>
       </div>
 
@@ -204,7 +207,7 @@ const TopBar = () => {
             </div>
             <Link to="/checkout" className="flex items-center space-x-2 text-gray-700">
               <ShoppingCartIcon className="h-6 w-6 text-gray-600" />
-              <span>Cart 0 Items</span>
+              <span>Cart {cartCount} Items</span>
             </Link>
           </nav>
         </div>

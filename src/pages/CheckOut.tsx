@@ -1,17 +1,9 @@
-"use client";
-
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Check, X, CreditCard, Lock } from 'lucide-react';
 import TopBar from '../components/Topbar';
 import Footer from '../components/footer';
-import { books } from '../data/books';
-
-// --- Mock Cart Data from books ---
-const initialCartItems = [
-  { id: books[0].id, title: books[0].title, author: books[0].author, price: books[0].price, imageUrl: books[0].imageUrl, quantity: 1 },
-  { id: books[1].id, title: books[1].title, author: books[1].author, price: books[1].price, imageUrl: books[1].imageUrl, quantity: 2 },
-];
+import { useCart } from '../context/cartContext';
 
 // --- Checkout Stepper Component ---
 const CheckoutStepper = ({ currentStep }) => {
@@ -48,16 +40,8 @@ const CheckoutStepper = ({ currentStep }) => {
 };
 
 // --- Shopping Cart View ---
-const ShoppingCartView = ({ cartItems, setCartItems, goToNextStep }) => {
-  const updateQuantity = (id, newQuantity) => {
-    if (newQuantity < 1) return;
-    setCartItems(cartItems.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
-  };
-  const removeItem = (id) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
-  };
-
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+const ShoppingCartView = ({ cartItems, updateQuantity, removeFromCart, clearCart, goToNextStep }) => {
+  const subtotal = cartItems.reduce((sum, item) => sum + parseFloat(item.price.replace('£', '')) * item.quantity, 0);
   const shipping = 5.00;
   const total = subtotal + shipping;
 
@@ -65,52 +49,77 @@ const ShoppingCartView = ({ cartItems, setCartItems, goToNextStep }) => {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 animate-on-scroll">
       <div className="lg:col-span-2">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Your Cart</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-3 sm:p-4 font-semibold text-sm text-gray-600">PRODUCT</th>
-                <th className="p-3 sm:p-4 font-semibold text-sm text-gray-600">PRICE</th>
-                <th className="p-3 sm:p-4 font-semibold text-sm text-gray-600">QUANTITY</th>
-                <th className="p-3 sm:p-4 font-semibold text-sm text-gray-600">TOTAL</th>
-                <th className="p-3 sm:p-4"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {cartItems.map(item => (
-                <tr key={item.id} className="border-b border-gray-200">
-                  <td className="p-3 sm:p-4">
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      <img src={item.imageUrl} alt={item.title} className="w-16 sm:w-20 h-20 sm:h-24 object-cover rounded" />
-                      <div>
-                        <p className="font-semibold text-sm sm:text-base text-gray-800">{item.title}</p>
-                        <p className="text-xs text-gray-500">{item.author}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-3 sm:p-4 font-semibold text-sm sm:text-base text-gray-800">£{item.price.toFixed(2)}</td>
-                  <td className="p-3 sm:p-4">
-                    <div className="flex items-center border border-gray-300 rounded-md">
-                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="px-2 sm:px-3 py-1 text-sm sm:text-base font-bold text-gray-700">-</button>
-                      <span className="px-3 sm:px-4 py-1 border-l border-r border-gray-300 text-sm sm:text-base">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-2 sm:px-3 py-1 text-sm sm:text-base font-bold text-gray-700">+</button>
-                    </div>
-                  </td>
-                  <td className="p-3 sm:p-4 font-bold text-sm sm:text-base text-gray-800">£{(item.price * item.quantity).toFixed(2)}</td>
-                  <td className="p-3 sm:p-4">
-                    <button onClick={() => removeItem(item.id)} className="text-gray-400 hover:text-red-500">
-                      <X size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
-          <Link to="/category" className="bg-gray-200 text-gray-800 font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-md text-center text-sm sm:text-base hover:bg-gray-300">CONTINUE SHOPPING</Link>
-          <button onClick={() => setCartItems([])} className="bg-gray-200 text-gray-800 font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-md text-sm sm:text-base hover:bg-gray-300">CLEAR SHOPPING CART</button>
-        </div>
+        {cartItems.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-600 text-lg">Your cart is empty.</p>
+            <Link to="/category" className="text-red-600 hover:underline mt-4 inline-block">Continue Shopping</Link>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="p-3 sm:p-4 font-semibold text-sm text-gray-600">PRODUCT</th>
+                    <th className="p-3 sm:p-4 font-semibold text-sm text-gray-600">PRICE</th>
+                    <th className="p-3 sm:p-4 font-semibold text-sm text-gray-600">QUANTITY</th>
+                    <th className="p-3 sm:p-4 font-semibold text-sm text-gray-600">TOTAL</th>
+                    <th className="p-3 sm:p-4"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cartItems.map(item => (
+                    <tr key={item.id} className="border-b border-gray-200">
+                      <td className="p-3 sm:p-4">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <img src={item.img} alt={item.title} className="w-16 sm:w-20 h-20 sm:h-24 object-cover rounded" />
+                          <div>
+                            <p className="font-semibold text-sm sm:text-base text-gray-800">{item.title}</p>
+                            <p className="text-xs text-gray-500">{item.author}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3 sm:p-4 font-semibold text-sm sm:text-base text-gray-800">{item.price}</td>
+                      <td className="p-3 sm:p-4">
+                        <div className="flex items-center border border-gray-300 rounded-md">
+                          <button 
+                            onClick={() => {
+                              console.log(`Decrease quantity for ${item.id}, current: ${item.quantity}`);
+                              updateQuantity(item.id, item.quantity - 1);
+                            }} 
+                            className="px-2 sm:px-3 py-1 text-sm sm:text-base font-bold text-gray-700"
+                          >
+                            -
+                          </button>
+                          <span className="px-3 sm:px-4 py-1 border-l border-r border-gray-300 text-sm sm:text-base">{item.quantity}</span>
+                          <button 
+                            onClick={() => {
+                              console.log(`Increase quantity for ${item.id}, current: ${item.quantity}`);
+                              updateQuantity(item.id, item.quantity + 1);
+                            }} 
+                            className="px-2 sm:px-3 py-1 text-sm sm:text-base font-bold text-gray-700"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </td>
+                      <td className="p-3 sm:p-4 font-bold text-sm sm:text-base text-gray-800">£{(parseFloat(item.price.replace('£', '')) * item.quantity).toFixed(2)}</td>
+                      <td className="p-3 sm:p-4">
+                        <button onClick={() => removeFromCart(item.id)} className="text-gray-400 hover:text-red-500">
+                          <X size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+              <Link to="/category" className="bg-gray-200 text-gray-800 font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-md text-center text-sm sm:text-base hover:bg-gray-300">CONTINUE SHOPPING</Link>
+              <button onClick={clearCart} className="bg-gray-200 text-gray-800 font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-md text-sm sm:text-base hover:bg-gray-300">CLEAR SHOPPING CART</button>
+            </div>
+          </>
+        )}
       </div>
       <div className="lg:col-span-1">
         <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md sticky top-20 sm:top-28">
@@ -120,7 +129,7 @@ const ShoppingCartView = ({ cartItems, setCartItems, goToNextStep }) => {
             <div className="flex justify-between"><p>Shipping</p><p>£{shipping.toFixed(2)}</p></div>
             <div className="border-t pt-3 sm:pt-4 flex justify-between font-bold text-base sm:text-lg text-gray-800"><p>TOTAL</p><p>£{total.toFixed(2)}</p></div>
           </div>
-          <button onClick={goToNextStep} className="w-full mt-6 sm:mt-8 bg-red-600 text-white py-2 sm:py-3 rounded-md font-semibold text-sm sm:text-base hover:bg-red-700 transition-colors">
+          <button onClick={goToNextStep} className="w-full mt-6 sm:mt-8 bg-red-600 text-white py-2 sm:py-3 rounded-md font-semibold text-sm sm:text-base hover:bg-red-700 transition-colors" disabled={cartItems.length === 0}>
             PROCEED TO CHECKOUT
           </button>
         </div>
@@ -221,9 +230,14 @@ const PaymentForm = ({ goToNextStep }) => {
 
 // --- Review and Place Order ---
 const ReviewOrder = ({ cartItems, goToPreviousStep }) => {
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const navigate = useNavigate();
+  const subtotal = cartItems.reduce((sum, item) => sum + parseFloat(item.price.replace('£', '')) * item.quantity, 0);
   const shipping = 5.00;
   const total = subtotal + shipping;
+
+  const handlePlaceOrder = () => {
+    navigate('/payment');
+  };
 
   return (
     <div className="max-w-3xl mx-auto animate-on-scroll">
@@ -247,7 +261,7 @@ const ReviewOrder = ({ cartItems, goToPreviousStep }) => {
             {cartItems.map(item => (
               <div key={item.id} className="flex items-center justify-between py-2 text-sm sm:text-base text-gray-700">
                 <p>{item.title} (x{item.quantity})</p>
-                <p>£{(item.price * item.quantity).toFixed(2)}</p>
+                <p>£{(parseFloat(item.price.replace('£', '')) * item.quantity).toFixed(2)}</p>
               </div>
             ))}
           </div>
@@ -257,7 +271,10 @@ const ReviewOrder = ({ cartItems, goToPreviousStep }) => {
           <div className="flex justify-between"><p>Shipping</p><p>£{shipping.toFixed(2)}</p></div>
           <div className="flex justify-between font-bold text-base sm:text-lg text-gray-800"><p>Total</p><p>£{total.toFixed(2)}</p></div>
         </div>
-        <button className="w-full mt-6 sm:mt-8 bg-red-600 text-white py-2 sm:py-3 rounded-md font-semibold text-sm sm:text-base hover:bg-red-700 transition-colors">
+        <button
+          onClick={handlePlaceOrder}
+          className="w-full mt-6 sm:mt-8 bg-red-600 text-white py-2 sm:py-3 rounded-md font-semibold text-sm sm:text-base hover:bg-red-700 transition-colors"
+        >
           PLACE ORDER
         </button>
       </div>
@@ -267,8 +284,8 @@ const ReviewOrder = ({ cartItems, goToPreviousStep }) => {
 
 // --- Main Checkout Flow Component ---
 const CheckoutFlow = () => {
+  const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
   const [step, setStep] = useState(1);
-  const [cartItems, setCartItems] = useState(initialCartItems);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -304,7 +321,7 @@ const CheckoutFlow = () => {
       <main className="flex-1 p-4 sm:p-8 overflow-y-auto pb-16 lg:pb-8">
         <div className="max-w-7xl mx-auto">
           <CheckoutStepper currentStep={step} />
-          {step === 1 && <ShoppingCartView cartItems={cartItems} setCartItems={setCartItems} goToNextStep={() => setStep(2)} />}
+          {step === 1 && <ShoppingCartView cartItems={cartItems} updateQuantity={updateQuantity} removeFromCart={removeFromCart} clearCart={clearCart} goToNextStep={() => setStep(2)} />}
           {step === 2 && <PaymentForm goToNextStep={() => setStep(3)} />}
           {step === 3 && <ReviewOrder cartItems={cartItems} goToPreviousStep={() => setStep(2)} />}
         </div>

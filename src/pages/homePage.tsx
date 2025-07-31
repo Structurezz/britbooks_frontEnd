@@ -1,9 +1,10 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import Footer from '../components/footer';
 import TopBar from '../components/Topbar';
 import { books as realBooks } from '../data/books';
+import { useCart } from '../context/cartContext';
 
 // Convert real books to homepage format
 const formattedRealBooks = realBooks.map(book => ({
@@ -20,29 +21,43 @@ const bookData = formattedRealBooks;
 // --- Reusable Components ---
 
 // Book Card Component for the shelves
-const BookCard = ({ id, img, title, author, price }) => (
-  <div className="relative group flex-shrink-0 w-full max-w-[180px] text-center border border-gray-200 rounded-lg p-3 transition-shadow hover:shadow-lg">
-    <img src={img} alt={title} className="w-full h-60 object-cover mb-3 rounded" />
-    <h3 className="font-semibold text-sm truncate">{title}</h3>
-    <p className="text-gray-500 text-xs mb-2">{author}</p>
-    <div className="flex items-center justify-center text-yellow-400 mb-2">
-      {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
-    </div>
-    <p className="text-blue-600 font-bold mb-3">{price}</p>
-    <button className="bg-red-400 text-white px-4 py-2 rounded-full hover:bg-red-500 text-xs w-full transition-colors">
-      ADD TO BASKET
-    </button>
+const BookCard = ({ id, img, title, author, price }) => {
+  const { addToCart } = useCart();
 
-    {/* Quick View Button */}
-    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-      <Link to={`/browse/${id}`}>
-        <button className="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300">
-          QUICK VIEW
-        </button>
-      </Link>
+  const handleAddToCart = () => {
+    addToCart({ id, img, title, author, price, quantity: 1 });
+  };
+
+  return (
+    <div className="relative group flex-shrink-0 w-full max-w-[180px] text-center border border-gray-200 rounded-lg p-3 transition-shadow hover:shadow-lg">
+      {/* Book Image with Quick View Overlay */}
+      <div className="relative">
+        <img src={img} alt={title} className="w-full h-60 object-cover mb-3 rounded" />
+        {/* Quick View Button Overlay (restricted to image area) */}
+        <div className="absolute inset-x-0 top-0 h-60 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+          <Link to={`/browse/${id}`}>
+            <button className="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300">
+              QUICK VIEW
+            </button>
+          </Link>
+        </div>
+      </div>
+      {/* Book Details and Add to Basket */}
+      <h3 className="font-semibold text-sm truncate">{title}</h3>
+      <p className="text-gray-500 text-xs mb-2">{author}</p>
+      <div className="flex items-center justify-center text-yellow-400 mb-2">
+        {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
+      </div>
+      <p className="text-blue-600 font-bold mb-3">{price}</p>
+      <button
+        onClick={handleAddToCart}
+        className="bg-red-400 text-white px-4 py-2 rounded-full hover:bg-red-500 text-xs w-full transition-colors"
+      >
+        ADD TO BASKET
+      </button>
     </div>
-  </div>
-);
+  );
+};
 
 // Updated Book Shelf Component with Grid View for Mobile
 const BookShelf = ({ title, books: allBooks }) => {
@@ -168,7 +183,7 @@ const Homepage = () => {
               className="absolute inset-0 w-full h-full object-cover rounded-lg"
             >
               <source
-                src="https://media.istockphoto.com/id/1302273587/video/laptop-on-a-table-at-the-end-of-an-aisle-of-books-in-a-library.mp4?s=mp4-640x640-is&k=20&c=HERTtG3ibKF0poAWZ8NrgIPbph1408m0jYwVOhS8mIM="
+                src="https://media.istockphoto.com/id/1309243817/video/laptop-on-a-table-at-the-end-of-an-aisle-of-books-in-a-library.mp4?s=mp4-640x640-is&k=20&c=HERTtG3ibKF0poAWZ8NrgIPbph1408m0jYwVOhS8mIM="
                 type="video/mp4"
               />
               Your browser does not support the video tag.
