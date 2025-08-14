@@ -46,12 +46,16 @@ export const fetchBooks = async ({ page, limit, sort, order, filters }: FetchBoo
       params,
     });
 
+    const FALLBACK_IMAGE =
+  "https://media.istockphoto.com/id/2166128139/vector/modern-annual-report-cover-book-business-template-design.jpg?s=612x612&w=0&k=20&c=-OtjHOz2K389qHnIo8mcUXCrGpKo3I0uJoICB2SSTik=";
+
+
     const books: Book[] = response.data.listings.map((listing: any) => ({
       id: listing._id,
       title: listing.title,
       author: listing.author,
       price: listing.price,
-      imageUrl: listing.samplePageUrls?.[0] || "https://via.placeholder.com/150",
+      imageUrl: listing.samplePageUrls?.[0] || FALLBACK_IMAGE,
       genre: listing.category, // Map API's `category` to `genre`
       condition: listing.condition,
       description: listing.description || "",

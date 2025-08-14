@@ -394,7 +394,7 @@ const FilterSidebar = ({
                 </h4>
                 <ul className="space-y-2">
                   {priceRanges.map((range) => (
-                    <li key={range.label} className="flex items-center">
+                    <li key={range.label} client:visible className="flex items-center">
                       <input
                         type="checkbox"
                         id={`price-${range.label}`}
@@ -693,6 +693,42 @@ const dataCache = {
   }
 };
 
+// --- Filter and sort cached books ---
+const filterAndSortBooks = (books: BookCardProps[], filters: any, sortBy: string): BookCardProps[] => {
+  let filteredBooks = [...books];
+
+  // Apply price filter
+  if (filters.priceMin !== undefined && filters.priceMax !== undefined) {
+    filteredBooks = filteredBooks.filter(book => {
+      const price = parseFloat(book.price.replace('£', ''));
+      return price >= filters.priceMin && price <= filters.priceMax;
+    });
+  }
+
+  // Apply rating filter (assuming rating is fixed at 4.5 for now)
+  if (filters.rating) {
+    filteredBooks = filteredBooks.filter(() => Math.round(4.5) >= filters.rating);
+  }
+
+  // Apply condition filter (not implemented in BookCardProps, so placeholder)
+  if (filters.condition) {
+    // Assuming condition would be part of BookCardProps if available
+    filteredBooks = filteredBooks.filter(book => (book as any).condition === filters.condition);
+  }
+
+  // Apply sort
+  if (sortBy === 'price-low-high') {
+    filteredBooks.sort((a, b) => parseFloat(a.price.replace('£', '')) - parseFloat(b.price.replace('£', '')));
+  } else if (sortBy === 'price-high-low') {
+    filteredBooks.sort((a, b) => parseFloat(b.price.replace('£', '')) - parseFloat(a.price.replace('£', '')));
+  } else if (sortBy === 'rating') {
+    // Assuming fixed rating of 4.5; adjust if ratings are dynamic
+    filteredBooks.sort((a, b) => 4.5 - 4.5); // Placeholder
+  }
+
+  return filteredBooks;
+};
+
 // --- Main Category Page Component ---
 const CategoryBrowsePage = () => {
   const [categories, setCategories] = useState<string[]>([]);
@@ -823,6 +859,21 @@ const CategoryBrowsePage = () => {
     };
   }, [categories, bookCounts]);
 
+  // Filter and sort cached books for rendering
+  const filteredBooksByCategory = useMemo(() => {
+    if (!dataCache.current.booksByCategory) return booksByCategory;
+    
+    const filtered = { ...booksByCategory };
+    Object.keys(filtered).forEach(category => {
+      if (filters.category && filters.category !== category) {
+        filtered[category] = [];
+      } else {
+        filtered[category] = filterAndSortBooks(booksByCategory[category] || [], filters, sortBy);
+      }
+    });
+    return filtered;
+  }, [booksByCategory, filters, sortBy]);
+
   const handleFilterClick = (category: string) => {
     setFilters((prev) => ({ ...prev, category }));
     setIsFilterOpen(false);
@@ -901,6 +952,7 @@ const CategoryBrowsePage = () => {
                     fetchParams={{ filters: { genre: filters.category, ...filters }, sortBy }}
                     onFilterClick={handleFilterClick}
                     bookCount={bookCounts[filters.category] || 0}
+                    initialBooks={filteredBooksByCategory[filters.category] || []}
                   />
                 ) : (
                   categories.map((category) => (
@@ -910,7 +962,7 @@ const CategoryBrowsePage = () => {
                       fetchParams={{ filters: { genre: category, ...filters }, sortBy }}
                       onFilterClick={handleFilterClick}
                       bookCount={bookCounts[category] || 0}
-                      initialBooks={booksByCategory[category] || []}
+                      initialBooks={filteredBooksByCategory[category] || []}
                     />
                   ))
                 )}
