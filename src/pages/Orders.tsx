@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams, useLocation } from 'react-router-dom';
+import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/authContext';
+import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
 import TopBar from '../components/Topbar';
-import Footer from '../components/footer'; // Added Footer import
+import Footer from '../components/footer';
 
 // --- SVG ICONS ---
 const SearchIcon = (props) => (
@@ -25,165 +28,10 @@ const XIcon = (props) => (
   </svg>
 );
 
-// --- MOCK DATA ---
-const orders = [
-  { id: '12345', date: '2025-06-20', total: 45.99, status: 'Processing', hasDetails: false },
-  {
-    id: '12346',
-    date: '2025-06-18',
-    total: 29.50,
-    status: 'Dispatched',
-    hasDetails: true,
-    items: [
-      { title: 'The Stardust Thief', author: 'Chelsea Abdullah', quantity: 1, price: 18.99 },
-      { title: 'Lessons in Chemistry', author: 'Bonnie Garmus', quantity: 1, price: 10.51 },
-    ],
-    shippingAddress: {
-      name: 'John Doe',
-      street: '123 Bookworm Lane',
-      city: 'London',
-      postalCode: 'W1A 1AA',
-      country: 'United Kingdom',
-    },
-    paymentDetails: {
-      method: 'Visa',
-      lastFour: '1234',
-      expiry: '12/26',
-      billingAddress: {
-        name: 'John Doe',
-        street: '123 Bookworm Lane',
-        city: 'London',
-        postalCode: 'W1A 1AA',
-        country: 'United Kingdom',
-      },
-    },
-    tracking: [
-      { status: 'Ordered', date: '2025-06-18T10:00:00Z', location: 'Order placed online', completed: true },
-      { status: 'Processing', date: '2025-06-18T12:00:00Z', location: 'Warehouse, London', completed: true },
-      { status: 'Dispatched', date: '2025-06-19T09:00:00Z', location: 'London Sorting Facility', completed: true },
-      { status: 'In Transit', date: null, location: 'En route to delivery hub', completed: false },
-      { status: 'Out for Delivery', date: null, location: 'Local Delivery Hub', completed: false },
-      { status: 'Delivered', date: null, location: 'Delivered to address', completed: false },
-    ],
-  },
-  { id: '12347', date: '2025-06-15', total: 60.75, status: 'Delivered', hasDetails: false },
-  {
-    id: '12348',
-    date: '2025-06-12',
-    total: 15.99,
-    status: 'Delivered',
-    hasDetails: true,
-    items: [
-      { title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', quantity: 1, price: 15.99 },
-    ],
-    shippingAddress: {
-      name: 'Jane Smith',
-      street: '456 Reader Road',
-      city: 'Manchester',
-      postalCode: 'M1 2BB',
-      country: 'United Kingdom',
-    },
-    paymentDetails: {
-      method: 'MasterCard',
-      lastFour: '5678',
-      expiry: '09/25',
-      billingAddress: {
-        name: 'Jane Smith',
-        street: '456 Reader Road',
-        city: 'Manchester',
-        postalCode: 'M1 2BB',
-        country: 'United Kingdom',
-      },
-    },
-    tracking: [
-      { status: 'Ordered', date: '2025-06-12T08:00:00Z', location: 'Order placed online', completed: true },
-      { status: 'Processing', date: '2025-06-12T10:00:00Z', location: 'Warehouse, Manchester', completed: true },
-      { status: 'Dispatched', date: '2025-06-13T07:00:00Z', location: 'Manchester Sorting Facility', completed: true },
-      { status: 'In Transit', date: '2025-06-13T14:00:00Z', location: 'En route to delivery hub', completed: true },
-      { status: 'Out for Delivery', date: '2025-06-14T09:00:00Z', location: 'Local Delivery Hub', completed: true },
-      { status: 'Delivered', date: '2025-06-14T12:30:00Z', location: 'Delivered to address', completed: true },
-    ],
-  },
-  { id: '12349', date: '2025-06-10', total: 89.25, status: 'Processing', hasDetails: false },
-  {
-    id: '12350',
-    date: '2025-06-08',
-    total: 32.00,
-    status: 'Dispatched',
-    hasDetails: true,
-    items: [
-      { title: '1984', author: 'George Orwell', quantity: 2, price: 16.00 },
-    ],
-    shippingAddress: {
-      name: 'John Doe',
-      street: '123 Bookworm Lane',
-      city: 'London',
-      postalCode: 'W1A 1AA',
-      country: 'United Kingdom',
-    },
-    paymentDetails: {
-      method: 'Visa',
-      lastFour: '1234',
-      expiry: '12/26',
-      billingAddress: {
-        name: 'John Doe',
-        street: '123 Bookworm Lane',
-        city: 'London',
-        postalCode: 'W1A 1AA',
-        country: 'United Kingdom',
-      },
-    },
-    tracking: [
-      { status: 'Ordered', date: '2025-06-08T11:00:00Z', location: 'Order placed online', completed: true },
-      { status: 'Processing', date: '2025-06-08T13:00:00Z', location: 'Warehouse, London', completed: true },
-      { status: 'Dispatched', date: '2025-06-09T08:00:00Z', location: 'London Sorting Facility', completed: true },
-      { status: 'In Transit', date: null, location: 'En route to delivery hub', completed: false },
-      { status: 'Out for Delivery', date: null, location: 'Local Delivery Hub', completed: false },
-      { status: 'Delivered', date: null, location: 'Delivered to address', completed: false },
-    ],
-  },
-  { id: '12351', date: '2025-06-05', total: 55.40, status: 'Processing', hasDetails: false },
-  {
-    id: '12352',
-    date: '2025-06-03',
-    total: 22.80,
-    status: 'Delivered',
-    hasDetails: true,
-    items: [
-      { title: 'Pride and Prejudice', author: 'Jane Austen', quantity: 1, price: 22.80 },
-    ],
-    shippingAddress: {
-      name: 'Jane Smith',
-      street: '456 Reader Road',
-      city: 'Manchester',
-      postalCode: 'M1 2BB',
-      country: 'United Kingdom',
-    },
-    paymentDetails: {
-      method: 'MasterCard',
-      lastFour: '5678',
-      expiry: '09/25',
-      billingAddress: {
-        name: 'Jane Smith',
-        street: '456 Reader Road',
-        city: 'Manchester',
-        postalCode: 'M1 2BB',
-        country: 'United Kingdom',
-      },
-    },
-    tracking: [
-      { status: 'Ordered', date: '2025-06-03T09:00:00Z', location: 'Order placed online', completed: true },
-      { status: 'Processing', date: '2025-06-03T11:00:00Z', location: 'Warehouse, Manchester', completed: true },
-      { status: 'Dispatched', date: '2025-06-04T06:00:00Z', location: 'Manchester Sorting Facility', completed: true },
-      { status: 'In Transit', date: '2025-06-04T15:00:00Z', location: 'En route to delivery hub', completed: true },
-      { status: 'Out for Delivery', date: '2025-06-05T08:00:00Z', location: 'Local Delivery Hub', completed: true },
-      { status: 'Delivered', date: '2025-06-05T11:45:00Z', location: 'Delivered to address', completed: true },
-    ],
-  },
-];
+const API_BASE_URL = 'https://britbooks-api-production.up.railway.app/api';
 
 // --- ItemDetails Component ---
-const ItemDetails = () => {
+const ItemDetails = ({ orders }) => {
   const { orderId, itemIndex } = useParams();
   const order = orders.find((o) => o.id === orderId);
   const item = order && order.hasDetails && order.items ? order.items[parseInt(itemIndex)] : null;
@@ -211,7 +59,6 @@ const ItemDetails = () => {
           <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">Item Information</h3>
           <div className="text-sm sm:text-base text-gray-600 space-y-2">
             <p><span className="font-medium">Title:</span> {item.title}</p>
-            <p><span className="font-medium">Author:</span> {item.author}</p>
             <p><span className="font-medium">Quantity:</span> {item.quantity}</p>
             <p><span className="font-medium">Price:</span> £{item.price.toFixed(2)}</p>
             <p><span className="font-medium">Total:</span> £{(item.price * item.quantity).toFixed(2)}</p>
@@ -231,7 +78,102 @@ const ItemDetails = () => {
 // --- OrderDetailsSidebar Component ---
 const OrderDetailsSidebar = ({ isOpen, onClose }) => {
   const { id } = useParams();
-  const order = orders.find((o) => o.id === id);
+  const { auth, logout } = useAuth();
+  const navigate = useNavigate();
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isOpen || !id) return;
+
+    const fetchOrderDetails = async () => {
+      if (!auth.token) {
+        console.error('No auth token. Redirecting to login.');
+        navigate('/login');
+        return;
+      }
+
+      try {
+        const response = await axios.get(`${API_BASE_URL}/orders/${id}`, {
+          headers: { Authorization: `Bearer ${auth.token}` },
+        });
+
+        if (response.data.success && response.data.order) {
+          const fetchedOrder = response.data.order;
+          const mappedOrder = {
+            id: fetchedOrder._id,
+            date: fetchedOrder.createdAt,
+            total: fetchedOrder.total,
+            status: fetchedOrder.status.charAt(0).toUpperCase() + fetchedOrder.status.slice(1),
+            hasDetails: fetchedOrder.items.length > 0,
+            items: fetchedOrder.items.map((item) => ({
+              title: item.listing || 'Unknown Item',
+              quantity: item.quantity,
+              price: item.priceAtPurchase,
+            })),
+            shippingAddress: {
+              name: fetchedOrder.shippingAddress.fullName,
+              street: fetchedOrder.shippingAddress.addressLine1,
+              city: fetchedOrder.shippingAddress.city,
+              postalCode: fetchedOrder.shippingAddress.postalCode,
+              country: fetchedOrder.shippingAddress.country,
+            },
+            paymentDetails: {
+              method: fetchedOrder.payment.method.charAt(0).toUpperCase() + fetchedOrder.payment.method.slice(1),
+              status: fetchedOrder.payment.status.charAt(0).toUpperCase() + fetchedOrder.payment.status.slice(1),
+            },
+            tracking: [
+              { status: 'Ordered', date: fetchedOrder.createdAt, location: 'Order placed online', completed: true },
+              { status: 'Processing', date: fetchedOrder.createdAt, location: 'Warehouse', completed: fetchedOrder.status !== 'pending' },
+              { status: 'Dispatched', date: null, location: 'Sorting Facility', completed: fetchedOrder.status === 'completed' },
+              { status: 'In Transit', date: null, location: 'En route to delivery hub', completed: false },
+              { status: 'Out for Delivery', date: null, location: 'Local Delivery Hub', completed: false },
+              { status: 'Delivered', date: null, location: 'Delivered to address', completed: fetchedOrder.status === 'completed' },
+            ],
+          };
+          setOrder(mappedOrder);
+          console.log('Order details loaded successfully.');
+        } else {
+          console.error('Failed to load order details.');
+        }
+      } catch (err) {
+        console.error('Fetch order details error:', err);
+        if (err.response?.status === 401) {
+          console.error('Session expired. Redirecting to login.');
+          logout();
+          navigate('/login');
+        } else {
+          console.error('Failed to load order details. Please try again.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrderDetails();
+  }, [isOpen, id, auth.token, navigate, logout]);
+
+  if (loading) {
+    return (
+      <div
+        className={`fixed top-0 right-0 h-full w-full sm:w-80 bg-white shadow-lg z-50 transform transition-transform duration-300 ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <div className="flex flex-col h-full">
+          <div className="p-3 sm:p-4 border-b flex justify-between items-center">
+            <h2 className="text-base sm:text-lg font-bold text-gray-800">Loading...</h2>
+            <Link to="/orders" onClick={onClose} className="text-gray-600 hover:text-gray-800">
+              <XIcon className="w-4 sm:w-5 h-4 sm:h-5" />
+            </Link>
+          </div>
+          <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
+            <p className="text-sm sm:text-base text-gray-600">Loading order details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!order || !order.hasDetails) {
     return (
@@ -264,13 +206,11 @@ const OrderDetailsSidebar = ({ isOpen, onClose }) => {
 
   const getStatusClass = (status) => {
     switch (status) {
-      case 'Processing':
+      case 'Pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'Dispatched':
-      case 'In Transit':
-      case 'Out for Delivery':
+      case 'Confirmed':
         return 'bg-blue-100 text-blue-800';
-      case 'Delivered':
+      case 'Completed':
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -315,7 +255,6 @@ const OrderDetailsSidebar = ({ isOpen, onClose }) => {
                   <div key={index} className="flex justify-between items-center border-b pb-2">
                     <div>
                       <p className="text-xs sm:text-sm font-semibold text-gray-800">{item.title}</p>
-                      <p className="text-xs text-gray-600">by {item.author}</p>
                       <p className="text-xs text-gray-600">Quantity: {item.quantity}</p>
                     </div>
                     <p className="text-xs sm:text-sm font-semibold text-gray-800">£{(item.price * item.quantity).toFixed(2)}</p>
@@ -339,13 +278,8 @@ const OrderDetailsSidebar = ({ isOpen, onClose }) => {
             <div>
               <h3 className="text-sm sm:text-base font-semibold text-gray-800 mb-2">Payment Details</h3>
               <p className="text-xs sm:text-sm text-gray-600">
-                <span className="font-medium">Method:</span> {order.paymentDetails.method} ending in {order.paymentDetails.lastFour}<br />
-                <span className="font-medium">Expiry:</span> {order.paymentDetails.expiry}<br />
-                <span className="font-medium">Billing Address:</span><br />
-                {order.paymentDetails.billingAddress.name}<br />
-                {order.paymentDetails.billingAddress.street}<br />
-                {order.paymentDetails.billingAddress.city}, {order.paymentDetails.billingAddress.postalCode}<br />
-                {order.paymentDetails.billingAddress.country}
+                <span className="font-medium">Method:</span> {order.paymentDetails.method}<br />
+                <span className="font-medium">Status:</span> {order.paymentDetails.status}
               </p>
             </div>
 
@@ -380,10 +314,86 @@ const OrderDetailsSidebar = ({ isOpen, onClose }) => {
 };
 
 // --- MainContent Component ---
-const MainContent = () => {
+const MainContent = ({ setOrders }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortOption, setSortOption] = useState('date-desc');
+  const [orders, setLocalOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { auth, logout } = useAuth();
+  const navigate = useNavigate();
+
+  // Fetch orders from API
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!auth.token) {
+        console.error('No auth token. Redirecting to login.');
+        navigate('/login');
+        return;
+      }
+
+      try {
+        const decoded = jwtDecode(auth.token);
+        const userId = decoded.userId;
+        const response = await axios.get(`${API_BASE_URL}/orders/user/${userId}`, {
+          headers: { Authorization: `Bearer ${auth.token}` },
+        });
+
+        if (response.data.success) {
+          // Map API response to match UI structure
+          const mappedOrders = response.data.orders.map((order) => ({
+            id: order._id,
+            date: order.createdAt,
+            total: order.total,
+            status: order.status.charAt(0).toUpperCase() + order.status.slice(1),
+            hasDetails: order.items.length > 0,
+            items: order.items.map((item) => ({
+              title: item.listing || 'Unknown Item',
+              quantity: item.quantity,
+              price: item.priceAtPurchase,
+            })),
+            shippingAddress: {
+              name: order.shippingAddress.fullName,
+              street: order.shippingAddress.addressLine1,
+              city: order.shippingAddress.city,
+              postalCode: order.shippingAddress.postalCode,
+              country: order.shippingAddress.country,
+            },
+            paymentDetails: {
+              method: order.payment.method.charAt(0).toUpperCase() + order.payment.method.slice(1),
+              status: order.payment.status.charAt(0).toUpperCase() + order.payment.status.slice(1),
+            },
+            tracking: [
+              { status: 'Ordered', date: order.createdAt, location: 'Order placed online', completed: true },
+              { status: 'Processing', date: order.createdAt, location: 'Warehouse', completed: order.status !== 'pending' },
+              { status: 'Dispatched', date: null, location: 'Sorting Facility', completed: order.status === 'completed' },
+              { status: 'In Transit', date: null, location: 'En route to delivery hub', completed: false },
+              { status: 'Out for Delivery', date: null, location: 'Local Delivery Hub', completed: false },
+              { status: 'Delivered', date: null, location: 'Delivered to address', completed: order.status === 'completed' },
+            ],
+          }));
+          setLocalOrders(mappedOrders);
+          setOrders(mappedOrders);
+          console.log('Orders loaded successfully.');
+        } else {
+          console.error('Failed to load orders.');
+        }
+      } catch (err) {
+        console.error('Fetch orders error:', err);
+        if (err.response?.status === 401) {
+          console.error('Session expired. Redirecting to login.');
+          logout();
+          navigate('/login');
+        } else {
+          console.error('Failed to load orders. Please try again.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [auth.token, navigate, logout, setOrders]);
 
   // Filter and sort orders
   const filteredOrders = orders
@@ -402,11 +412,11 @@ const MainContent = () => {
 
   const getStatusClass = (status) => {
     switch (status) {
-      case 'Processing':
+      case 'Pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'Dispatched':
+      case 'Confirmed':
         return 'bg-blue-100 text-blue-800';
-      case 'Delivered':
+      case 'Completed':
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -455,9 +465,9 @@ const MainContent = () => {
               className="w-full sm:w-auto p-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >
               <option value="All">All Statuses</option>
-              <option value="Processing">Processing</option>
-              <option value="Dispatched">Dispatched</option>
-              <option value="Delivered">Delivered</option>
+              <option value="Pending">Pending</option>
+              <option value="Confirmed">Confirmed</option>
+              <option value="Completed">Completed</option>
             </select>
             <select
               value={sortOption}
@@ -474,72 +484,78 @@ const MainContent = () => {
 
         {/* Orders Table (Desktop) */}
         <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b text-gray-500 bg-gray-50">
-                <th className="p-3 sm:p-4 font-semibold text-sm sm:text-base">Order Number</th>
-                <th className="p-3 sm:p-4 font-semibold text-sm sm:text-base">Date</th>
-                <th className="p-3 sm:p-4 font-semibold text-sm sm:text-base">Items</th>
-                <th className="p-3 sm:p-4 font-semibold text-sm sm:text-base">Total</th>
-                <th className="p-3 sm:p-4 font-semibold text-sm sm:text-base">Status</th>
-                <th className="p-3 sm:p-4 font-semibold text-sm sm:text-base">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="p-4 text-center text-gray-500 text-sm sm:text-base">
-                    No orders found matching your criteria.
-                  </td>
+          {loading ? (
+            <div className="text-center text-gray-500 text-sm sm:text-base">Loading orders...</div>
+          ) : (
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b text-gray-500 bg-gray-50">
+                  <th className="p-3 sm:p-4 font-semibold text-sm sm:text-base">Order Number</th>
+                  <th className="p-3 sm:p-4 font-semibold text-sm sm:text-base">Date</th>
+                  <th className="p-3 sm:p-4 font-semibold text-sm sm:text-base">Items</th>
+                  <th className="p-3 sm:p-4 font-semibold text-sm sm:text-base">Total</th>
+                  <th className="p-3 sm:p-4 font-semibold text-sm sm:text-base">Status</th>
+                  <th className="p-3 sm:p-4 font-semibold text-sm sm:text-base">Actions</th>
                 </tr>
-              ) : (
-                filteredOrders.map((order) => (
-                  <tr
-                    key={order.id}
-                    className="border-b last:border-none hover:bg-gray-100 transition-colors"
-                  >
-                    <td className="p-3 sm:p-4 text-gray-700 text-sm sm:text-base">#{order.id}</td>
-                    <td className="p-3 sm:p-4 text-gray-700 text-sm sm:text-base">
-                      {new Date(order.date).toLocaleDateString('en-GB')}
-                    </td>
-                    <td className="p-3 sm:p-4 text-gray-700 text-sm sm:text-base">
-                      {formatItems(order.items, order.id, order.hasDetails)}
-                    </td>
-                    <td className="p-3 sm:p-4 text-gray-700 text-sm sm:text-base">
-                      £{order.total.toFixed(2)}
-                    </td>
-                    <td className="p-3 sm:p-4">
-                      <span
-                        className={`text-xs sm:text-sm font-semibold px-2 py-1 rounded-full ${getStatusClass(order.status)}`}
-                      >
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="p-3 sm:p-4">
-                      {order.hasDetails ? (
-                        <Link
-                          to={`/order/${order.id}`}
-                          className="bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors text-sm sm:text-base"
-                          aria-label={`View details for order ${order.id}`}
-                        >
-                          View Order Details
-                        </Link>
-                      ) : (
-                        <span className="text-gray-500 italic text-sm sm:text-base">
-                          No details available
-                        </span>
-                      )}
+              </thead>
+              <tbody>
+                {filteredOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-4 text-center text-gray-500 text-sm sm:text-base">
+                      No orders found matching your criteria.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredOrders.map((order) => (
+                    <tr
+                      key={order.id}
+                      className="border-b last:border-none hover:bg-gray-100 transition-colors"
+                    >
+                      <td className="p-3 sm:p-4 text-gray-700 text-sm sm:text-base">#{order.id}</td>
+                      <td className="p-3 sm:p-4 text-gray-700 text-sm sm:text-base">
+                        {new Date(order.date).toLocaleDateString('en-GB')}
+                      </td>
+                      <td className="p-3 sm:p-4 text-gray-700 text-sm sm:text-base">
+                        {formatItems(order.items, order.id, order.hasDetails)}
+                      </td>
+                      <td className="p-3 sm:p-4 text-gray-700 text-sm sm:text-base">
+                        £{order.total.toFixed(2)}
+                      </td>
+                      <td className="p-3 sm:p-4">
+                        <span
+                          className={`text-xs sm:text-sm font-semibold px-2 py-1 rounded-full ${getStatusClass(order.status)}`}
+                        >
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="p-3 sm:p-4">
+                        {order.hasDetails ? (
+                          <Link
+                            to={`/order/${order.id}`}
+                            className="bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors text-sm sm:text-base"
+                            aria-label={`View details for order ${order.id}`}
+                          >
+                            View Order Details
+                          </Link>
+                        ) : (
+                          <span className="text-gray-500 italic text-sm sm:text-base">
+                            No details available
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
 
         {/* Orders Cards (Mobile) */}
         <div className="md:hidden space-y-4">
-          {filteredOrders.length === 0 ? (
+          {loading ? (
+            <div className="text-center text-gray-500 text-sm">Loading orders...</div>
+          ) : filteredOrders.length === 0 ? (
             <div className="text-center text-gray-500 text-sm">
               No orders found matching your criteria.
             </div>
@@ -595,6 +611,7 @@ const MainContent = () => {
 // --- OrdersPage Component ---
 const OrdersPage = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [orders, setOrders] = useState([]);
   const location = useLocation();
   const { id } = useParams();
 
@@ -631,11 +648,10 @@ const OrdersPage = () => {
         }
         .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
       `}</style>
-
       <TopBar />
-      {location.pathname.startsWith('/item/') ? <ItemDetails /> : <MainContent />}
+      {location.pathname.startsWith('/item/') ? <ItemDetails orders={orders} /> : <MainContent setOrders={setOrders} />}
       <OrderDetailsSidebar isOpen={isDetailsOpen} onClose={() => setIsDetailsOpen(false)} />
-      <Footer /> {/* Added Footer component */}
+      <Footer />
     </div>
   );
 };

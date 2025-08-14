@@ -2,10 +2,9 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import Footer from "../components/footer";
 import TopBar from "../components/Topbar";
-import { Star } from "lucide-react";
-import { Menu, X, SearchIcon, UserCircleIcon, ShoppingCartIcon, BookIcon, CalendarIcon, SparkleIcon } from "lucide-react";
-import { books as baseBooks } from "../data/books";
+import { Star, BookOpen, Star as StarIcon } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import { fetchBooks, Book } from "../data/books";
 import { useCart } from "../context/cartContext";
 
 // --- SVG ICONS ---
@@ -28,7 +27,7 @@ const InstagramIcon = (props) => (
 // --- Reusable Components ---
 
 // Star Rating Component
-const StarRating = ({ rating, starSize = 16 }) => (
+const StarRating = ({ rating, starSize = 16 }: { rating: number; starSize?: number }) => (
   <div className="flex items-center justify-center">
     {[...Array(5)].map((_, i) => (
       <Star
@@ -42,13 +41,13 @@ const StarRating = ({ rating, starSize = 16 }) => (
 );
 
 // Book Card Component
-const BookCard = ({ book }) => {
+const BookCard = ({ book }: { book: Book }) => {
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
     addToCart({
       id: book.id,
-      img: book.imageUrl,
+      img: book.imageUrl || "https://via.placeholder.com/150",
       title: book.title,
       author: book.author,
       price: `£${book.price.toFixed(2)}`,
@@ -62,7 +61,7 @@ const BookCard = ({ book }) => {
       <div className="relative bg-gray-100 p-2 sm:p-3 flex-shrink-0">
         <Link to={`/browse/${book.id}`} className="block">
           <img
-            src={book.imageUrl}
+            src={book.imageUrl || "https://via.placeholder.com/150"}
             alt={book.title}
             className="w-full h-40 sm:h-48 object-cover mx-auto transition-transform duration-300 group-hover:scale-105 rounded-t-lg"
           />
@@ -93,46 +92,24 @@ const BookCard = ({ book }) => {
   );
 };
 
-// --- MOCK DATA (Extend to 120 books from provided books array) ---
-const generateNewBooks = () => {
-  const books = [];
-  for (let i = 0; i < 6; i++) { // 6 iterations to reach ~120 books (20 * 6 = 120)
-    baseBooks.forEach((book, index) => {
-      books.push({
-        id: String(i * 20 + index + 1),
-        title: `${book.title} ${i + 1}`,
-        author: book.author,
-        price: book.price + (i * 0.5),
-        imageUrl: book.imageUrl,
-        releaseDate: book.releaseDate,
-        genre: book.genre,
-        condition: book.condition,
-        description: book.description,
-        stock: book.stock,
-        rating: book.rating + (i * 0.1 % 1),
-        isbn: book.isbn,
-        pages: book.pages,
-      });
-    });
-  }
-  return books.slice(0, 120); // Ensure exactly 120 books
-};
-
-const newBooks = generateNewBooks();
-
 // --- Why Shop Section Data ---
 const whyShopPoints = [
-  { title: "Fresh Stories", description: "Discover the latest books hot off the press.", icon: BookIcon },
-  { title: "Sustainable Reading", description: "Support eco-friendly practices with pre-loved and new books.", icon: ShoppingCartIcon },
-  { title: "Curated Selection", description: "Handpicked titles to spark your imagination.", icon: Star },
+  { title: "Fresh Stories", description: "Discover the latest books hot off the press.", icon: BookOpen },
+  { title: "Sustainable Reading", description: "Support eco-friendly practices with pre-loved and new books.", icon: StarIcon },
+  { title: "Curated Selection", description: "Handpicked titles to spark your imagination.", icon: StarIcon },
 ];
 
 // --- Main New Arrivals Page Component ---
 const NewArrivalsPage = () => {
   const { addToCart } = useCart();
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(12); // Modern default, adjustable
-  const gridRef = useRef(null); // Reference to the grid section
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [featuredBooks, setFeaturedBooks] = useState<Book[]>([]);
+  const [totalBooks, setTotalBooks] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -154,23 +131,47 @@ const NewArrivalsPage = () => {
     };
   }, []);
 
-  const isRecentRelease = (releaseDate) => {
-    const release = new Date(releaseDate);
-    const today = new Date("2025-07-31"); // Updated to current date
-    const diffDays = (today - release) / (1000 * 60 * 60 * 24);
-    return diffDays <= 7;
-  };
+  useEffect(() => {
+    const fetchNewArrivals = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Fetch main books (120 to match original)
+        const { books: mainBooks, total } = await fetchBooks({
+          page: currentPage,
+          limit: itemsPerPage,
+          sort: "createdAt",
+          order: "desc",
+        });
+        setBooks(mainBooks);
+        setTotalBooks(total);
+
+        // Fetch featured books (top 5 newest)
+        const { books: featured } = await fetchBooks({
+          page: 1,
+          limit: 5,
+          sort: "createdAt",
+          order: "desc",
+        });
+        setFeaturedBooks(featured);
+
+        setIsLoading(false);
+      } catch (err) {
+        setError("Failed to load new arrivals. Please try again.");
+        setIsLoading(false);
+        console.error("❌ Failed to fetch new arrivals:", err instanceof Error ? err.message : err);
+      }
+    };
+    fetchNewArrivals();
+  }, [currentPage, itemsPerPage]);
 
   // Pagination logic
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentBooks = useMemo(() => newBooks.slice(indexOfFirstItem, indexOfLastItem), [currentPage, newBooks]);
-  const totalPages = Math.ceil(newBooks.length / itemsPerPage);
+  const totalPages = Math.ceil(totalBooks / itemsPerPage);
+  const currentBooks = useMemo(() => books, [books]);
 
-  const handlePageChange = (page) => {
+  const handlePageChange = (page: number) => {
     if (page > 0 && page <= totalPages) {
       setCurrentPage(page);
-      // Scroll to the top of the grid section
       if (gridRef.current) {
         gridRef.current.scrollIntoView({ behavior: "smooth" });
       }
@@ -193,12 +194,30 @@ const NewArrivalsPage = () => {
     return pages;
   }, [currentPage, totalPages]);
 
-  // Select featured books (up to 5 recent releases, fallback to first 5 if none)
-  const featuredBooks = newBooks
-    .filter((book) => isRecentRelease(book.releaseDate))
-    .slice(0, 5);
-  if (featuredBooks.length === 0) {
-    featuredBooks.push(...newBooks.slice(0, 5));
+  if (isLoading) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+        <TopBar />
+        <div className="container mx-auto px-4 sm:px-8 py-8 text-center">
+          <p className="text-gray-500 text-lg">Loading new arrivals...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+        <TopBar />
+        <div className="container mx-auto px-4 sm:px-8 py-8 text-center">
+          <p className="text-red-500 text-lg">{error}</p>
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   return (
@@ -254,7 +273,7 @@ const NewArrivalsPage = () => {
         <header className="hero-section text-white py-10 sm:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center animate-on-scroll">
             <div className="flex justify-center items-center space-x-2 mb-2">
-              <SparkleIcon className="h-8 w-8 text-red-500 animate-bounce" />
+              <StarIcon className="h-8 w-8 text-red-500 animate-bounce" />
               <h1 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-400">
                 New Arrivals
               </h1>
@@ -276,7 +295,7 @@ const NewArrivalsPage = () => {
                   <div className="relative">
                     <Link to={`/browse/${book.id}`}>
                       <img
-                        src={book.imageUrl}
+                        src={book.imageUrl || "https://via.placeholder.com/150"}
                         alt={book.title}
                         className="w-full h-40 sm:h-48 object-cover"
                       />
@@ -305,7 +324,7 @@ const NewArrivalsPage = () => {
                       onClick={() => {
                         addToCart({
                           id: book.id,
-                          img: book.imageUrl,
+                          img: book.imageUrl || "https://via.placeholder.com/150",
                           title: book.title,
                           author: book.author,
                           price: `£${book.price.toFixed(2)}`,
@@ -321,6 +340,9 @@ const NewArrivalsPage = () => {
                 </div>
               ))}
             </div>
+            {featuredBooks.length === 0 && (
+              <p className="text-center text-gray-500 py-6">No featured books available.</p>
+            )}
           </div>
         </section>
 
@@ -358,7 +380,7 @@ const NewArrivalsPage = () => {
                 </select>
               </div>
               <div className="text-sm text-gray-500">
-                {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, newBooks.length)} of {newBooks.length}
+                {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, totalBooks)} of {totalBooks}
               </div>
               <div className="flex items-center space-x-3">
                 <label htmlFor="show" className="font-medium text-gray-700">Show:</label>
@@ -387,10 +409,10 @@ const NewArrivalsPage = () => {
               ))}
             </div>
             {currentBooks.length === 0 && (
-              <p className="text-center text-gray-500 py-6">No books match your filters.</p>
+              <p className="text-center text-gray-500 py-6">No new arrivals available.</p>
             )}
 
-            {newBooks.length > itemsPerPage && (
+            {totalBooks > itemsPerPage && (
               <div className="mt-6 flex justify-center items-center space-x-2 sm:space-x-3">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}

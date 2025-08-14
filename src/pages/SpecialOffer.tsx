@@ -1,28 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Star } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 import Footer from "../components/footer";
 import TopBar from "../components/Topbar";
-import { books as realBooks } from "../data/books";
-import toast, { Toaster } from "react-hot-toast";
+import { fetchBooks, Book } from "../data/books";
 import { useCart } from "../context/cartContext";
-
-// --- SVG ICONS ---
-const StarIcon = (props) => (
-  <svg
-    {...props}
-    xmlns="http://www.w3.org/2000/svg"
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    stroke="currentColor"
-    strokeWidth="1"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-  </svg>
-);
 
 // --- Campaign Data ---
 const campaignAds = [
@@ -90,24 +73,78 @@ const SpecialOffersPage = () => {
   const [fictionTimer, setFictionTimer] = useState(24 * 60 * 60); // 24 hours
   const [fantasyTimer, setFantasyTimer] = useState(12 * 60 * 60); // 12 hours
   const [nonFictionTimer, setNonFictionTimer] = useState(6 * 60 * 60); // 6 hours
-  const [dealOfHour, setDealOfHour] = useState(null);
+  const [fictionBooks, setFictionBooks] = useState<Book[]>([]);
+  const [fantasyBooks, setFantasyBooks] = useState<Book[]>([]);
+  const [nonFictionBooks, setNonFictionBooks] = useState<Book[]>([]);
+  const [dealOfHour, setDealOfHour] = useState<Book | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Filter books by genre for flash sales
-  const fictionBooks = realBooks.filter(book => book.genre === "Fiction").slice(0, 6).map(book => ({
-    ...book,
-    originalPrice: book.price,
-    discountPrice: book.price * 0.6, // 40% off
-  }));
-  const fantasyBooks = realBooks.filter(book => book.genre === "Fantasy").slice(0, 6).map(book => ({
-    ...book,
-    originalPrice: book.price,
-    discountPrice: book.price * 0.5, // 50% off
-  }));
-  const nonFictionBooks = realBooks.filter(book => book.genre === "Non-Fiction").slice(0, 6).map(book => ({
-    ...book,
-    originalPrice: book.price,
-    discountPrice: book.price * 0.7, // 30% off
-  }));
+  // Fetch books for flash sales and deal of the hour
+  useEffect(() => {
+    const fetchSaleBooks = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Fetch Fiction books (40% off)
+        const { books: fiction } = await fetchBooks({
+          page: 1,
+          limit: 6,
+          filters: { genre: "Fiction" },
+        });
+        setFictionBooks(fiction.map(book => ({
+          ...book,
+          originalPrice: book.price,
+          discountPrice: book.price * 0.6, // 40% off
+        })));
+
+        // Fetch Fantasy books (50% off)
+        const { books: fantasy } = await fetchBooks({
+          page: 1,
+          limit: 6,
+          filters: { genre: "Fantasy" },
+        });
+        setFantasyBooks(fantasy.map(book => ({
+          ...book,
+          originalPrice: book.price,
+          discountPrice: book.price * 0.5, // 50% off
+        })));
+
+        // Fetch Non-Fiction books (30% off)
+        const { books: nonFiction } = await fetchBooks({
+          page: 1,
+          limit: 6,
+          filters: { genre: "Non-Fiction" },
+        });
+        setNonFictionBooks(nonFiction.map(book => ({
+          ...book,
+          originalPrice: book.price,
+          discountPrice: book.price * 0.7, // 30% off
+        })));
+
+        // Fetch Deal of the Hour (random book)
+        const { books: randomBooks } = await fetchBooks({
+          page: 1,
+          limit: 1,
+          sort: "random", // Assuming API supports random sorting
+        });
+        if (randomBooks.length > 0) {
+          setDealOfHour({
+            ...randomBooks[0],
+            originalPrice: randomBooks[0].price,
+            discountPrice: randomBooks[0].price * 0.6, // 40% off
+          });
+        }
+
+        setIsLoading(false);
+      } catch (err) {
+        setError("Failed to load special offers. Please try again.");
+        setIsLoading(false);
+        console.error("❌ Failed to fetch sale books:", err instanceof Error ? err.message : err);
+      }
+    };
+    fetchSaleBooks();
+  }, []);
 
   // Countdown timers
   useEffect(() => {
@@ -119,32 +156,42 @@ const SpecialOffersPage = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Deal of the Hour
+  // Deal of the Hour (refresh hourly)
   useEffect(() => {
-    const updateDeal = () => {
-      const randomBook = realBooks[Math.floor(Math.random() * realBooks.length)];
-      setDealOfHour({
-        ...randomBook,
-        originalPrice: randomBook.price,
-        discountPrice: randomBook.price * 0.6, // 40% off
-      });
+    const updateDeal = async () => {
+      try {
+        const { books: randomBooks } = await fetchBooks({
+          page: 1,
+          limit: 1,
+          sort: "random",
+        });
+        if (randomBooks.length > 0) {
+          setDealOfHour({
+            ...randomBooks[0],
+            originalPrice: randomBooks[0].price,
+            discountPrice: randomBooks[0].price * 0.6, // 40% off
+          });
+        }
+      } catch (err) {
+        console.error("❌ Failed to fetch deal of the hour:", err instanceof Error ? err.message : err);
+      }
     };
     updateDeal();
     const dealTimer = setInterval(updateDeal, 3600 * 1000); // Update hourly
     return () => clearInterval(dealTimer);
   }, []);
 
-  const formatTime = (seconds) => {
+  const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handleAddToCart = (book) => {
+  const handleAddToCart = (book: Book & { discountPrice: number }) => {
     addToCart({
       id: book.id,
-      imageUrl: book.imageUrl,
+      imageUrl: book.imageUrl || "https://via.placeholder.com/150",
       title: book.title,
       author: book.author,
       price: `£${book.discountPrice.toFixed(2)}`,
@@ -158,12 +205,12 @@ const SpecialOffersPage = () => {
   const questComplete = cartItemsCount >= 4;
 
   // Book Card Component
-  const BookCard = ({ book, saleType }) => (
+  const BookCard = ({ book, saleType }: { book: Book & { originalPrice: number; discountPrice: number }; saleType: string }) => (
     <div className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden">
       <div className="relative bg-gray-100 p-3 flex-shrink-0">
         <Link to={`/browse/${book.id}`} className="block">
           <img
-            src={book.imageUrl}
+            src={book.imageUrl || "https://via.placeholder.com/150"}
             alt={book.title}
             className="w-full h-48 object-cover rounded-t-lg"
           />
@@ -185,9 +232,11 @@ const SpecialOffersPage = () => {
         <div className="mb-1">
           <div className="flex items-center">
             {[...Array(5)].map((_, i) => (
-              <StarIcon
+              <Star
                 key={i}
+                size={20}
                 className={i < Math.round(book.rating) ? "text-yellow-400" : "text-gray-300"}
+                fill={i < Math.round(book.rating) ? "currentColor" : "none"}
               />
             ))}
           </div>
@@ -207,6 +256,32 @@ const SpecialOffersPage = () => {
       </div>
     </div>
   );
+
+  if (isLoading) {
+    return (
+      <div className="bg-gray-50 font-sans min-h-screen">
+        <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+        <TopBar />
+        <div className="container mx-auto px-4 sm:px-6 py-8 text-center">
+          <p className="text-gray-500 text-lg">Loading special offers...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-gray-50 font-sans min-h-screen">
+        <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+        <TopBar />
+        <div className="container mx-auto px-4 sm:px-6 py-8 text-center">
+          <p className="text-red-500 text-lg">{error}</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 font-sans min-h-screen">
@@ -284,6 +359,9 @@ const SpecialOffersPage = () => {
             {fictionBooks.map((book) => (
               <BookCard key={book.id} book={book} saleType="Fiction Frenzy" />
             ))}
+            {fictionBooks.length === 0 && (
+              <p className="text-center text-gray-500 py-6 col-span-full">No Fiction books available.</p>
+            )}
           </div>
         </section>
 
@@ -297,6 +375,9 @@ const SpecialOffersPage = () => {
             {fantasyBooks.map((book) => (
               <BookCard key={book.id} book={book} saleType="Fantasy Blowout" />
             ))}
+            {fantasyBooks.length === 0 && (
+              <p className="text-center text-gray-500 py-6 col-span-full">No Fantasy books available.</p>
+            )}
           </div>
         </section>
 
@@ -310,6 +391,9 @@ const SpecialOffersPage = () => {
             {nonFictionBooks.map((book) => (
               <BookCard key={book.id} book={book} saleType="Non-Fiction Deals" />
             ))}
+            {nonFictionBooks.length === 0 && (
+              <p className="text-center text-gray-500 py-6 col-span-full">No Non-Fiction books available.</p>
+            )}
           </div>
         </section>
 

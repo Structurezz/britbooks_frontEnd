@@ -1,31 +1,41 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 import Footer from '../components/footer';
 import TopBar from '../components/Topbar';
-import { books as realBooks } from '../data/books';
+import { fetchBooks, Book } from '../data/books';
 import { useCart } from '../context/cartContext';
 
-// Convert real books to homepage format
-const formattedRealBooks = realBooks.map(book => ({
-  id: book.id,
-  img: book.imageUrl,
-  title: book.title,
-  author: book.author,
-  price: `£${book.price.toFixed(2)}`,
-}));
+// Interface for BookCard props
+interface BookCardProps {
+  id: string;
+  img: string;
+  title: string;
+  author: string;
+  price: string;
+}
 
-// Only use real books
-const bookData = formattedRealBooks;
+// Convert API books to homepage format
+const formatBooksForHomepage = (books: Book[]): BookCardProps[] => {
+  return books.map(book => ({
+    id: book.id,
+    img: book.imageUrl || 'https://via.placeholder.com/150',
+    title: book.title,
+    author: book.author,
+    price: `£${book.price.toFixed(2)}`,
+  }));
+};
 
 // --- Reusable Components ---
 
 // Book Card Component for the shelves
-const BookCard = ({ id, img, title, author, price }) => {
+const BookCard = ({ id, img, title, author, price }: BookCardProps) => {
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
     addToCart({ id, img, title, author, price, quantity: 1 });
+    toast.success(`${title} added to your basket!`);
   };
 
   return (
@@ -60,23 +70,61 @@ const BookCard = ({ id, img, title, author, price }) => {
 };
 
 // Updated Book Shelf Component with Grid View for Mobile
-const BookShelf = ({ title, books: allBooks }) => {
+const BookShelf = ({ title, fetchParams }: { title: string; fetchParams: any }) => {
+  const [books, setBooks] = useState<BookCardProps[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4; // Adjustable based on design
+
+  useEffect(() => {
+    const fetchShelfBooks = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const { books: fetchedBooks } = await fetchBooks({ page: 1, limit: 1000, ...fetchParams });
+        setBooks(formatBooksForHomepage(fetchedBooks));
+        setIsLoading(false);
+      } catch (err) {
+        setError(`Failed to load ${title.toLowerCase()}. Please try again.`);
+        setIsLoading(false);
+        console.error(`❌ Failed to fetch ${title}:`, err instanceof Error ? err.message : err);
+      }
+    };
+    fetchShelfBooks();
+  }, [fetchParams]);
 
   const paginatedBooks = useMemo(() => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    return allBooks.slice(indexOfFirstItem, indexOfLastItem);
-  }, [allBooks, currentPage]);
+    return books.slice(indexOfFirstItem, indexOfLastItem);
+  }, [books, currentPage]);
 
-  const totalPages = Math.ceil(allBooks.length / itemsPerPage);
+  const totalPages = Math.ceil(books.length / itemsPerPage);
 
-  const handlePageChange = (page) => {
+  const handlePageChange = (page: number) => {
     if (page > 0 && page <= totalPages) {
       setCurrentPage(page);
     }
   };
+
+  if (isLoading) {
+    return (
+      <section className="py-6 sm:py-8 animate-on-scroll">
+        <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mb-4">{title}</h2>
+        <p className="text-gray-500 text-center">Loading {title.toLowerCase()}...</p>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="py-6 sm:py-8 animate-on-scroll">
+        <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mb-4">{title}</h2>
+        <p className="text-red-500 text-center">{error}</p>
+      </section>
+    );
+  }
 
   return (
     <section className="py-6 sm:py-8 animate-on-scroll">
@@ -107,7 +155,7 @@ const BookShelf = ({ title, books: allBooks }) => {
         </div>
       </div>
       {paginatedBooks.length === 0 && (
-        <p className="text-center text-gray-500 py-4">No books available.</p>
+        <p className="text-center text-gray-500 py-4">No {title.toLowerCase()} available.</p>
       )}
     </section>
   );
@@ -136,15 +184,20 @@ const Homepage = () => {
     };
   }, []);
 
-  // Mock Data
-  const popularBooks = [...bookData].reverse();
-  const bestSellers = bookData.slice(2, 8);
-  const childrensBooks = bookData.slice(3, 9);
-  const clearanceItems = bookData.slice(1, 7);
-  const recentlyViewed = bookData.slice(0, 6);
+  // Fetch parameters for each shelf
+  const shelfFetchParams = {
+    newArrivals: { sort: "createdAt", order: "desc" },
+    popularBooks: { sort: "rating", order: "desc" },
+    bestSellers: { sort: "salesCount", order: "desc" },
+    childrensBooks: { sort: "createdAt", order: "desc" },
+    clearanceItems: { sort: "discount", order: "desc" },
+    recentlyViewed: { sort: "lastViewedAt", order: "desc" }, // ideally based on user history
+  };
+  
 
   return (
     <>
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <style>{`
         @keyframes fadeInUp {
           from {
@@ -161,12 +214,15 @@ const Homepage = () => {
           animation: fadeInUp 0.5s ease-out forwards;
         }
         
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
+        .scrollbar-thin::-webkit-scrollbar {
+          width: 6px;
         }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+          background-color: #9ca3af;
+          border-radius: 3px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+          background-color: #f3f4f6;
         }
       `}</style>
       <div className="bg-white">
@@ -226,8 +282,8 @@ const Homepage = () => {
 
           <div className="w-full mx-auto px-4 sm:px-8">
             {/* Book Shelves */}
-            <BookShelf title="New Arrivals" books={bookData} />
-            <BookShelf title="Popular Books" books={popularBooks} />
+            <BookShelf title="New Arrivals" fetchParams={shelfFetchParams.newArrivals} />
+            <BookShelf title="Popular Books" fetchParams={shelfFetchParams.popularBooks} />
             <div className="py-8 sm:py-12 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
               {[
                 { title: "Top 10 Best Sellers", image: "https://cdn-icons-png.flaticon.com/512/2331/2331970.png", link: "/bestsellers" },
@@ -257,10 +313,10 @@ const Homepage = () => {
                 </div>
               ))}
             </div>
-            <BookShelf title="Best Sellers" books={bestSellers} />
-            <BookShelf title="Children's Books" books={childrensBooks} />
-            <BookShelf title="Clearance Items" books={clearanceItems} />
-            <BookShelf title="Recently Viewed" books={recentlyViewed} />
+            <BookShelf title="Best Sellers" fetchParams={shelfFetchParams.bestSellers} />
+            <BookShelf title="Children's Books" fetchParams={shelfFetchParams.childrensBooks} />
+            <BookShelf title="Clearance Items" fetchParams={shelfFetchParams.clearanceItems} />
+            <BookShelf title="Recently Viewed" fetchParams={shelfFetchParams.recentlyViewed} />
           </div>
 
           {/* Promotional Banners with Image Backgrounds */}
