@@ -17,6 +17,7 @@
     "axios": "^1.11.0",
     "framer-motion": "^12.20.1",
     "jwt-decode": "^4.0.0",
+    "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.523.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -26,12 +27,15 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.2",
     "react-slick": "^0.30.3",
+    "react-virtualized-auto-sizer": "^1.0.26",
+    "react-window": "^1.8.11",
     "slick-carousel": "^1.8.1",
     "uuid": "^11.1.0",
     "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
+    "@types/lodash.debounce": "^4.0.9",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@types/react-slick": "^0.23.13",

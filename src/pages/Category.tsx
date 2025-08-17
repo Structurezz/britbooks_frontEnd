@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, Component, ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Star, X, Filter, ShoppingBag, Eye, Tag, MessageCircle, Truck } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import Footer from "../components/footer";
@@ -23,6 +23,8 @@ interface BookCardProps {
   title: string;
   author: string;
   price: string;
+  rating: number;
+  condition?: string;
 }
 
 // --- Convert API books to homepage format ---
@@ -33,6 +35,8 @@ const formatBooksForHomepage = (books: Book[]): BookCardProps[] => {
     title: book.title,
     author: book.author,
     price: `£${book.price.toFixed(2)}`,
+    rating: book.rating || 0,
+    condition: book.condition || "new",
   }));
 };
 
@@ -50,8 +54,26 @@ const StarRating = ({ rating, starSize = 14 }: { rating: number; starSize?: numb
   </div>
 );
 
+// --- Book Card Skeleton Component ---
+const BookCardSkeleton = () => (
+  <div className="relative flex-shrink-0 w-full max-w-[140px] text-center border border-gray-200 rounded-lg p-2 animate-pulse">
+    <div className="w-full h-48 bg-gray-200 mb-2 rounded" />
+    <div className="space-y-2">
+      <div className="w-3/4 h-3 bg-gray-200 mx-auto rounded" />
+      <div className="w-1/2 h-2 bg-gray-200 mx-auto rounded" />
+      <div className="flex justify-center gap-0.5">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="w-3 h-3 bg-gray-200 rounded-full" />
+        ))}
+      </div>
+      <div className="w-1/3 h-3 bg-gray-200 mx-auto rounded" />
+      <div className="w-full h-6 bg-gray-200 rounded-full" />
+    </div>
+  </div>
+);
+
 // --- Book Card Component ---
-const BookCard = ({ id, img, title, author, price }: BookCardProps) => {
+const BookCard = ({ id, img, title, author, price, rating }: BookCardProps) => {
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
@@ -73,8 +95,8 @@ const BookCard = ({ id, img, title, author, price }: BookCardProps) => {
       </div>
       <h3 className="font-semibold text-xs truncate">{title}</h3>
       <p className="text-gray-500 text-xs mb-1">{author}</p>
-      <div className="flex items-center justify-center text-yellow-400 mb-1">
-        <StarRating rating={4.5} starSize={12} />
+      <div className="flex items-center justify-center mb-1">
+        <StarRating rating={rating} starSize={12} />
       </div>
       <p className="text-blue-600 font-bold text-sm mb-2">{price}</p>
       <button
@@ -185,7 +207,9 @@ const BookShelf = ({ title, fetchParams, onFilterClick, bookCount, initialBooks 
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {isLoading ? (
-          <p className="text-gray-500 col-span-full text-center">Loading...</p>
+          [...Array(itemsPerPage)].map((_, i) => (
+            <BookCardSkeleton key={i} />
+          ))
         ) : error ? (
           <p className="text-red-500 col-span-full text-center">{error}</p>
         ) : books.length === 0 ? (
@@ -240,44 +264,60 @@ const FilterSidebar = ({
   filterOptions: any;
 }) => {
   const handleFilterClick = (filterType: string, value: string | number) => {
-    setFilters((prev: any) => ({
-      ...prev,
-      [filterType]: prev[filterType] === value ? null : value,
-      category: filterType === 'category' ? value : prev.category,
-    }));
-    if (filterType === 'category') {
-      setIsOpen(false);
-    }
+    setFilters((prev: any) => {
+      const currentValues = Array.isArray(prev[filterType]) ? prev[filterType] : [];
+      const newValues = currentValues.includes(value)
+        ? currentValues.filter((v: string | number) => v !== value)
+        : [...currentValues, value];
+      return {
+        ...prev,
+        [filterType]: newValues.length > 0 ? newValues : undefined,
+      };
+    });
   };
 
   const handlePriceFilter = (range: { min: number; max: number }) => {
-    setFilters((prev: any) => ({
-      ...prev,
-      priceMin: prev.priceMin === range.min ? null : range.min,
-      priceMax: prev.priceMax === range.max ? null : range.max,
-    }));
+    setFilters((prev: any) => {
+      const currentRanges = Array.isArray(prev.priceRanges) ? prev.priceRanges : [];
+      const isSelected = currentRanges.some((r: any) => r.min === range.min && r.max === range.max);
+      const newRanges = isSelected
+        ? currentRanges.filter((r: any) => r.min !== range.min || r.max !== range.max)
+        : [...currentRanges, range];
+      return {
+        ...prev,
+        priceRanges: newRanges.length > 0 ? newRanges : undefined,
+      };
+    });
   };
 
-  const handleRatingFilter = (rating: number) => {
-    setFilters((prev: any) => ({ ...prev, rating: prev.rating === rating ? null : rating }));
+  const handleClearFilterType = (filterType: string) => {
+    setFilters((prev: any) => ({
+      ...prev,
+      [filterType]: undefined,
+    }));
   };
 
   const renderFilterSection = (title: string, options: Record<string, number>, filterKey: string, Icon: any) => (
     <div className="mb-6 opacity-0 animate-fadeIn">
-      <h4 className="font-medium text-gray-700 mb-2 text-sm uppercase tracking-wide flex items-center">
-        <Icon className="mr-2 h-4 w-4 text-red-600" /> {title}
-      </h4>
+      <div className="flex justify-between items-center mb-2">
+        <h4 className="font-medium text-gray-700 text-sm uppercase tracking-wide flex items-center">
+          <Icon className="mr-2 h-4 w-4 text-red-600" /> {title}
+        </h4>
+        <button
+          onClick={() => handleClearFilterType(filterKey)}
+          className="text-xs text-red-600 hover:underline"
+        >
+          Clear
+        </button>
+      </div>
       <ul className="space-y-2">
         {Object.entries(options).map(([value, count]) => (
           <li key={value} className="flex items-center">
             <input
               type="checkbox"
               id={`${filterKey}-${value}`}
-              checked={filters[filterKey] === (filterKey === "rating" ? parseInt(value) : value)}
-              onChange={() => {
-                if (filterKey === "rating") handleRatingFilter(parseInt(value));
-                else handleFilterClick(filterKey, filterKey === "rating" ? parseInt(value) : value);
-              }}
+              checked={filters[filterKey]?.includes(filterKey === "rating" ? parseInt(value) : value)}
+              onChange={() => handleFilterClick(filterKey, filterKey === "rating" ? parseInt(value) : value)}
               className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded transition-all duration-200 hover:scale-110"
             />
             <label
@@ -386,19 +426,19 @@ const FilterSidebar = ({
           </div>
           <div className="p-4 overflow-y-auto flex-grow scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
             <div className="mb-8">
-              {renderFilterSection("Categories", filterOptions.category, "category", Filter)}
-              {renderFilterSection("Condition", filterOptions.condition, "condition", Filter)}
+              {renderFilterSection("Categories", filterOptions.category, "categories", Filter)}
+              {renderFilterSection("Condition", filterOptions.condition, "conditions", Filter)}
               <div className="mb-6 opacity-0 animate-fadeIn">
                 <h4 className="font-medium text-gray-700 mb-2 text-sm uppercase tracking-wide flex items-center">
                   <Filter className="mr-2 h-4 w-4 text-red-600" /> Price Range
                 </h4>
                 <ul className="space-y-2">
                   {priceRanges.map((range) => (
-                    <li key={range.label} client:visible className="flex items-center">
+                    <li key={range.label} className="flex items-center">
                       <input
                         type="checkbox"
                         id={`price-${range.label}`}
-                        checked={filters.priceMin === range.min && filters.priceMax === range.max}
+                        checked={filters.priceRanges?.some((r: any) => r.min === range.min && r.max === range.max)}
                         onChange={() => handlePriceFilter(range)}
                         className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded transition-all duration-200 hover:scale-110"
                       />
@@ -412,7 +452,7 @@ const FilterSidebar = ({
                   ))}
                 </ul>
               </div>
-              {renderFilterSection("Rating", filterOptions.rating, "rating", Star)}
+              {renderFilterSection("Rating", filterOptions.rating, "ratings", Star)}
               <div className="mb-6 opacity-0 animate-fadeIn">
                 <h4 className="font-medium text-gray-700 mb-2 text-sm uppercase tracking-wide flex items-center">
                   <Filter className="mr-2 h-4 w-4 text-red-600" /> Sort By
@@ -424,14 +464,14 @@ const FilterSidebar = ({
                   <option value="relevance">Relevance</option>
                   <option value="price-low-high">Price: Low to High</option>
                   <option value="price-high-low">Price: High to Low</option>
-                  <option value="rating">Rating</option>
+                  <option value="rating-high-low">Rating: High to Low</option>
                 </select>
               </div>
               <button
                 onClick={() => setFilters({})}
                 className="w-full bg-red-600 text-white font-medium py-2 rounded-md hover:bg-red-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 mt-2"
               >
-                Clear Filters
+                Clear All Filters
               </button>
             </div>
 
@@ -536,8 +576,8 @@ const FilterSidebar = ({
         <div className="bg-gradient-to-br from-gray-50 to-white p-4 rounded-xl shadow-lg flex flex-col sticky top-4">
           <h3 className="font-bold text-xl text-gray-900 mb-4 border-b pb-2 border-red-100">Filters & Offers</h3>
           <div className="overflow-y-auto pr-2 flex-grow scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-            {renderFilterSection("Categories", filterOptions.category, "category", Filter)}
-            {renderFilterSection("Condition", filterOptions.condition, "condition", Filter)}
+            {renderFilterSection("Categories", filterOptions.category, "categories", Filter)}
+            {renderFilterSection("Condition", filterOptions.condition, "conditions", Filter)}
             <div className="mb-6 opacity-0 animate-fadeIn">
               <h4 className="font-medium text-gray-700 mb-2 text-sm uppercase tracking-wide flex items-center">
                 <Filter className="mr-2 h-4 w-4 text-red-600" /> Price Range
@@ -548,7 +588,7 @@ const FilterSidebar = ({
                     <input
                       type="checkbox"
                       id={`price-${range.label}`}
-                      checked={filters.priceMin === range.min && filters.priceMax === range.max}
+                      checked={filters.priceRanges?.some((r: any) => r.min === range.min && r.max === range.max)}
                       onChange={() => handlePriceFilter(range)}
                       className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded transition-all duration-200 hover:scale-110"
                     />
@@ -562,7 +602,7 @@ const FilterSidebar = ({
                 ))}
               </ul>
             </div>
-            {renderFilterSection("Rating", filterOptions.rating, "rating", Star)}
+            {renderFilterSection("Rating", filterOptions.rating, "ratings", Star)}
             <div className="mb-6 opacity-0 animate-fadeIn">
               <h4 className="font-medium text-gray-700 mb-2 text-sm uppercase tracking-wide flex items-center">
                 <Filter className="mr-2 h-4 w-4 text-red-600" /> Sort By
@@ -574,14 +614,14 @@ const FilterSidebar = ({
                 <option value="relevance">Relevance</option>
                 <option value="price-low-high">Price: Low to High</option>
                 <option value="price-high-low">Price: High to Low</option>
-                <option value="rating">Rating</option>
+                <option value="rating-high-low">Rating: High to Low</option>
               </select>
             </div>
             <button
               onClick={() => setFilters({})}
               className="w-full bg-red-600 text-white font-medium py-2 rounded-md hover:bg-red-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 mt-2"
-            >
-              Clear Filters
+              >
+              Clear All Filters
             </button>
           </div>
 
@@ -697,23 +737,27 @@ const dataCache = {
 const filterAndSortBooks = (books: BookCardProps[], filters: any, sortBy: string): BookCardProps[] => {
   let filteredBooks = [...books];
 
+  // Apply category filter
+  if (filters.categories?.length > 0) {
+    filteredBooks = filteredBooks.filter(book => filters.categories.includes(book.category));
+  }
+
   // Apply price filter
-  if (filters.priceMin !== undefined && filters.priceMax !== undefined) {
+  if (filters.priceRanges?.length > 0) {
     filteredBooks = filteredBooks.filter(book => {
       const price = parseFloat(book.price.replace('£', ''));
-      return price >= filters.priceMin && price <= filters.priceMax;
+      return filters.priceRanges.some((range: any) => price >= range.min && price <= range.max);
     });
   }
 
-  // Apply rating filter (assuming rating is fixed at 4.5 for now)
-  if (filters.rating) {
-    filteredBooks = filteredBooks.filter(() => Math.round(4.5) >= filters.rating);
+  // Apply rating filter
+  if (filters.ratings?.length > 0) {
+    filteredBooks = filteredBooks.filter(book => filters.ratings.includes(Math.round(book.rating)));
   }
 
-  // Apply condition filter (not implemented in BookCardProps, so placeholder)
-  if (filters.condition) {
-    // Assuming condition would be part of BookCardProps if available
-    filteredBooks = filteredBooks.filter(book => (book as any).condition === filters.condition);
+  // Apply condition filter
+  if (filters.conditions?.length > 0) {
+    filteredBooks = filteredBooks.filter(book => book.condition && filters.conditions.includes(book.condition));
   }
 
   // Apply sort
@@ -721,9 +765,8 @@ const filterAndSortBooks = (books: BookCardProps[], filters: any, sortBy: string
     filteredBooks.sort((a, b) => parseFloat(a.price.replace('£', '')) - parseFloat(b.price.replace('£', '')));
   } else if (sortBy === 'price-high-low') {
     filteredBooks.sort((a, b) => parseFloat(b.price.replace('£', '')) - parseFloat(a.price.replace('£', '')));
-  } else if (sortBy === 'rating') {
-    // Assuming fixed rating of 4.5; adjust if ratings are dynamic
-    filteredBooks.sort((a, b) => 4.5 - 4.5); // Placeholder
+  } else if (sortBy === 'rating-high-low') {
+    filteredBooks.sort((a, b) => b.rating - a.rating);
   }
 
   return filteredBooks;
@@ -731,14 +774,27 @@ const filterAndSortBooks = (books: BookCardProps[], filters: any, sortBy: string
 
 // --- Main Category Page Component ---
 const CategoryBrowsePage = () => {
+  const { categoryId } = useParams<{ categoryId?: string }>();
   const [categories, setCategories] = useState<string[]>([]);
   const [booksByCategory, setBooksByCategory] = useState<Record<string, BookCardProps[]>>({});
   const [bookCounts, setBookCounts] = useState<Record<string, number>>({});
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState<{ categories?: string[], priceRanges?: { min: number, max: number }[], ratings?: number[], conditions?: string[] }>({});
   const [sortBy, setSortBy] = useState("relevance");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+  // Set initial category filter from URL
+  useEffect(() => {
+    if (categoryId) {
+      const formattedCategory = categoryId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      setFilters((prev) => ({
+        ...prev,
+        categories: [formattedCategory],
+      }));
+      setIsFilterOpen(false);
+    }
+  }, [categoryId]);
 
   // Fetch categories and first page of books, using cache if available
   useEffect(() => {
@@ -770,7 +826,7 @@ const CategoryBrowsePage = () => {
 
         const bookResults = await Promise.all(bookPromises);
         const newBooksByCategory = bookResults.reduce((acc, { category, books }) => {
-          acc[category] = books;
+          acc[category] = books.map(book => ({ ...book, category }));
           return acc;
         }, {} as Record<string, BookCardProps[]>);
         setBooksByCategory(newBooksByCategory);
@@ -862,10 +918,10 @@ const CategoryBrowsePage = () => {
   // Filter and sort cached books for rendering
   const filteredBooksByCategory = useMemo(() => {
     if (!dataCache.current.booksByCategory) return booksByCategory;
-    
+
     const filtered = { ...booksByCategory };
     Object.keys(filtered).forEach(category => {
-      if (filters.category && filters.category !== category) {
+      if (filters.categories?.length > 0 && !filters.categories.includes(category)) {
         filtered[category] = [];
       } else {
         filtered[category] = filterAndSortBooks(booksByCategory[category] || [], filters, sortBy);
@@ -875,7 +931,12 @@ const CategoryBrowsePage = () => {
   }, [booksByCategory, filters, sortBy]);
 
   const handleFilterClick = (category: string) => {
-    setFilters((prev) => ({ ...prev, category }));
+    setFilters((prev) => ({
+      ...prev,
+      categories: prev.categories?.includes(category)
+        ? prev.categories.filter((c: string) => c !== category)
+        : [...(prev.categories || []), category],
+    }));
     setIsFilterOpen(false);
   };
 
@@ -925,6 +986,13 @@ const CategoryBrowsePage = () => {
         .opacity-100 {
           opacity: 1 !important;
         }
+        .animate-pulse {
+          animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
       `}</style>
       <div className="bg-white">
         <TopBar />
@@ -942,18 +1010,24 @@ const CategoryBrowsePage = () => {
             <div className="w-full lg:w-3/4">
               <div className="space-y-8">
                 {isInitialLoading ? (
-                  <div className="text-center text-gray-500 text-lg">Loading categories...</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {[...Array(12)].map((_, i) => (
+                      <BookCardSkeleton key={i} />
+                    ))}
+                  </div>
                 ) : error ? (
                   <div className="text-center text-red-500 text-lg">{error}</div>
-                ) : filters.category ? (
-                  <BookShelf
-                    key={filters.category}
-                    title={filters.category}
-                    fetchParams={{ filters: { genre: filters.category, ...filters }, sortBy }}
-                    onFilterClick={handleFilterClick}
-                    bookCount={bookCounts[filters.category] || 0}
-                    initialBooks={filteredBooksByCategory[filters.category] || []}
-                  />
+                ) : filters.categories?.length > 0 ? (
+                  filters.categories.map(category => (
+                    <BookShelf
+                      key={category}
+                      title={category}
+                      fetchParams={{ filters: { genre: category, ...filters }, sortBy }}
+                      onFilterClick={handleFilterClick}
+                      bookCount={bookCounts[category] || 0}
+                      initialBooks={filteredBooksByCategory[category] || []}
+                    />
+                  ))
                 ) : (
                   categories.map((category) => (
                     <BookShelf

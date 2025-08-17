@@ -22,6 +22,26 @@ const StarRating = ({ rating, starSize = 12 }: { rating: number; starSize?: numb
   </div>
 );
 
+// 📚 Book Card Skeleton Component
+const BookCardSkeleton = () => (
+  <div className="bg-white rounded-lg shadow-md flex flex-col overflow-hidden border border-gray-200 h-full animate-pulse">
+    <div className="relative bg-gray-200 p-2 flex-shrink-0 h-48">
+      <div className="absolute top-0 left-0 bg-gray-700 h-6 w-12 rounded-br-lg"></div>
+    </div>
+    <div className="p-3 flex flex-col flex-grow items-center text-center space-y-2">
+      <div className="w-3/4 h-4 bg-gray-200 rounded"></div>
+      <div className="w-1/2 h-3 bg-gray-200 rounded"></div>
+      <div className="flex justify-center gap-0.5">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="w-3 h-3 bg-gray-200 rounded-full" />
+        ))}
+      </div>
+      <div className="w-1/3 h-4 bg-gray-200 rounded"></div>
+      <div className="w-full h-6 bg-gray-200 rounded-full"></div>
+    </div>
+  </div>
+);
+
 // 📚 Book Card Component
 interface BookCardProps {
   book: Book;
@@ -99,7 +119,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, rank }) => {
 // 📚 Browse by Category Component
 const CategoryCard: React.FC<{ category: { id: string; name: string; imageUrl: string } }> = ({ category }) => {
   return (
-    <Link to={`/category/${category.id}`} className="group">
+    <Link to={`/category`} className="group">
       <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-1">
         <div className="relative">
           <img
@@ -170,7 +190,7 @@ const BestsellersPage: React.FC = () => {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add("fade-in-up");
+            entry.target.classNameList.add("fade-in-up");
           }
         });
       },
@@ -216,8 +236,12 @@ const BestsellersPage: React.FC = () => {
       <div className="bg-gray-50 font-sans min-h-screen text-gray-800">
         <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
         <TopBar />
-        <div className="container mx-auto px-4 sm:px-6 py-8 text-center">
-          <p className="text-gray-500 text-lg">Loading bestsellers...</p>
+        <div className="container mx-auto px-4 sm:px-6 py-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+            {[...Array(BOOKS_PER_PAGE)].map((_, i) => (
+              <BookCardSkeleton key={i} />
+            ))}
+          </div>
         </div>
         <Footer />
       </div>
@@ -244,7 +268,12 @@ const BestsellersPage: React.FC = () => {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
         .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; opacity: 0; }
+        .animate-pulse { animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         .hero-section {
           background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
           background-size: cover;
@@ -323,19 +352,22 @@ const BestsellersPage: React.FC = () => {
               This Week's Top 100,000
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
-              {paginatedBooks.map((book, index) => (
-                <BookCard
-                  key={book.id}
-                  book={book}
-                  rank={(currentPage - 1) * BOOKS_PER_PAGE + index + 1}
-                />
-              ))}
+              {isLoading ? (
+                [...Array(BOOKS_PER_PAGE)].map((_, i) => (
+                  <BookCardSkeleton key={i} />
+                ))
+              ) : paginatedBooks.length === 0 ? (
+                <p className="text-center text-gray-500 py-6 col-span-full">No bestsellers available.</p>
+              ) : (
+                paginatedBooks.map((book, index) => (
+                  <BookCard
+                    key={book.id}
+                    book={book}
+                    rank={(currentPage - 1) * BOOKS_PER_PAGE + index + 1}
+                  />
+                ))
+              )}
             </div>
-            {paginatedBooks.length === 0 && (
-              <p className="text-center text-gray-500 py-6">No bestsellers available.</p>
-            )}
-
-            {/* Pagination */}
             {totalBooks > BOOKS_PER_PAGE && (
               <div className="mt-4 sm:mt-8 flex justify-center items-center space-x-2 sm:space-x-3 flex-wrap gap-y-2">
                 <button

@@ -67,6 +67,36 @@ const campaignAds = [
   },
 ];
 
+// --- Book Card Skeleton Component ---
+const BookCardSkeleton = () => (
+  <div className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden animate-pulse">
+    <div className="relative bg-gray-200 p-2 h-32">
+      <div className="absolute top-2 left-2 bg-gray-400 h-4 w-16 rounded"></div>
+    </div>
+    <div className="p-3 flex flex-col items-center space-y-2">
+      <div className="w-3/4 h-3 bg-gray-200 rounded"></div>
+      <div className="w-1/2 h-2 bg-gray-200 rounded"></div>
+      <div className="flex justify-center gap-0.5">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="w-3 h-3 bg-gray-200 rounded-full" />
+        ))}
+      </div>
+      <div className="w-1/3 h-3 bg-gray-200 rounded"></div>
+      <div className="w-full h-5 bg-gray-200 rounded-full"></div>
+    </div>
+  </div>
+);
+
+// --- Deal of the Hour Skeleton Component ---
+const DealOfHourSkeleton = () => (
+  <div className="bg-yellow-100 rounded-lg shadow-md p-6 animate-pulse">
+    <div className="w-1/2 h-5 bg-gray-200 rounded mx-auto mb-2"></div>
+    <div className="w-1/3 h-3 bg-gray-200 rounded mx-auto mb-2"></div>
+    <div className="w-1/4 h-4 bg-gray-200 rounded mx-auto mb-2"></div>
+    <div className="w-1/3 h-6 bg-gray-200 rounded-full mx-auto"></div>
+  </div>
+);
+
 // --- Component ---
 const SpecialOffersPage = () => {
   const { addToCart, cart } = useCart();
@@ -88,9 +118,9 @@ const SpecialOffersPage = () => {
       try {
         // Fetch Fiction books (40% off)
         const { books: fiction } = await fetchBooks({
-          page: 1,
-          limit: 6,
-          filters: { genre: "Fiction" },
+          page: 2,
+          limit: 500,
+          filters: { genre: "Literary Fiction" },
         });
         setFictionBooks(fiction.map(book => ({
           ...book,
@@ -100,8 +130,8 @@ const SpecialOffersPage = () => {
 
         // Fetch Fantasy books (50% off)
         const { books: fantasy } = await fetchBooks({
-          page: 1,
-          limit: 6,
+          page: 2,
+          limit: 500,
           filters: { genre: "Fantasy" },
         });
         setFantasyBooks(fantasy.map(book => ({
@@ -112,8 +142,8 @@ const SpecialOffersPage = () => {
 
         // Fetch Non-Fiction books (30% off)
         const { books: nonFiction } = await fetchBooks({
-          page: 1,
-          limit: 6,
+          page: 2,
+          limit: 500,
           filters: { genre: "Non-Fiction" },
         });
         setNonFictionBooks(nonFiction.map(book => ({
@@ -124,9 +154,9 @@ const SpecialOffersPage = () => {
 
         // Fetch Deal of the Hour (random book)
         const { books: randomBooks } = await fetchBooks({
-          page: 1,
-          limit: 1,
-          sort: "random", // Assuming API supports random sorting
+          page: 2,
+          limit: 500,
+          sort: "random",
         });
         if (randomBooks.length > 0) {
           setDealOfHour({
@@ -162,7 +192,7 @@ const SpecialOffersPage = () => {
       try {
         const { books: randomBooks } = await fetchBooks({
           page: 1,
-          limit: 1,
+          limit: 50,
           sort: "random",
         });
         if (randomBooks.length > 0) {
@@ -206,50 +236,50 @@ const SpecialOffersPage = () => {
 
   // Book Card Component
   const BookCard = ({ book, saleType }: { book: Book & { originalPrice: number; discountPrice: number }; saleType: string }) => (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden">
-      <div className="relative bg-gray-100 p-3 flex-shrink-0">
+    <div className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden max-w-[150px]">
+      <div className="relative bg-gray-100 p-2 flex-shrink-0">
         <Link to={`/browse/${book.id}`} className="block">
           <img
             src={book.imageUrl || "https://via.placeholder.com/150"}
             alt={book.title}
-            className="w-full h-48 object-cover rounded-t-lg"
+            className="w-full h-32 object-cover rounded-t-lg"
           />
         </Link>
-        <div className="absolute top-2 left-2 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded">{saleType}</div>
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+        <div className="absolute top-1 left-1 bg-yellow-400 text-black text-xs font-bold px-1 py-0.5 rounded">{saleType}</div>
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
           <Link to={`/browse/${book.id}`}>
-            <button className="bg-red-600 text-white px-3 py-1 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300 hover:bg-red-700">
+            <button className="bg-red-600 text-white px-2 py-1 rounded-md text-xs font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300 hover:bg-red-700">
               QUICK VIEW
             </button>
           </Link>
         </div>
       </div>
-      <div className="p-4 flex flex-col flex-grow items-center">
-        <h3 className="font-semibold text-sm text-gray-800 h-12 leading-6 mb-2 line-clamp-2">
+      <div className="p-2 flex flex-col flex-grow items-center">
+        <h3 className="font-semibold text-xs text-gray-800 h-8 leading-4 mb-1 line-clamp-2">
           {book.title}
         </h3>
-        <p className="text-xs text-gray-500 mb-1">{book.author}</p>
+        <p className="text-[10px] text-gray-500 mb-1">{book.author}</p>
         <div className="mb-1">
           <div className="flex items-center">
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
-                size={20}
+                size={12}
                 className={i < Math.round(book.rating) ? "text-yellow-400" : "text-gray-300"}
                 fill={i < Math.round(book.rating) ? "currentColor" : "none"}
               />
             ))}
           </div>
         </div>
-        <p className="text-lg font-bold text-gray-900 mb-2">
+        <p className="text-sm font-bold text-gray-900 mb-1">
           £{book.discountPrice.toFixed(2)}
         </p>
-        <p className="text-sm text-gray-500 line-through mb-2">
+        <p className="text-[10px] text-gray-500 line-through mb-1">
           £{book.originalPrice.toFixed(2)}
         </p>
         <button
           onClick={() => handleAddToCart(book)}
-          className="w-full bg-red-600 text-white font-medium py-2 rounded-md hover:bg-red-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-red-500 animate-pulse"
+          className="w-full bg-red-600 text-white font-medium py-1 rounded-md hover:bg-red-700 transition-colors text-xs focus:outline-none focus:ring-2 focus:ring-red-500"
         >
           ADD TO BASKET
         </button>
@@ -262,8 +292,77 @@ const SpecialOffersPage = () => {
       <div className="bg-gray-50 font-sans min-h-screen">
         <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
         <TopBar />
-        <div className="container mx-auto px-4 sm:px-6 py-8 text-center">
-          <p className="text-gray-500 text-lg">Loading special offers...</p>
+        <div className="container mx-auto px-4 sm:px-6 py-8">
+          <header className="relative text-white py-12 overflow-hidden">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute top-0 left-0 w-full h-full object-cover z-0"
+            >
+              <source
+                src="https://media.istockphoto.com/id/1310576990/fr/vid%C3%A9o/%C3%A9tiquette-3-jours-gauche-sur-fond-blanc-ic%C3%B4ne-plate-motion-graphics.mp4?s=mp4-640x640-is&k=20&c=ezUJb1sIa11feB4HwEFMnEPHHjvqcL5wqkyuhSp_6zQ="
+                type="video/mp4"
+              />
+              Your browser does not support the video tag.
+            </video>
+            <div className="absolute inset-0 bg-black opacity-50 z-10"></div>
+            <div className="relative z-20 text-center">
+              <h1 className="text-4xl font-bold">Mega Flash Sale Extravaganza</h1>
+              <p className="text-md mt-3">Over 500,000 books at unbeatable prices—shop now before time runs out!</p>
+            </div>
+          </header>
+          <main className="container mx-auto px-4 sm:px-6 py-8">
+            {/* Deal of the Hour Skeleton */}
+            <section className="mb-8 text-center">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Deal of the Hour</h2>
+              <DealOfHourSkeleton />
+            </section>
+            {/* Fiction Frenzy Skeleton */}
+            <section className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Fiction Frenzy - 40% Off</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <BookCardSkeleton key={i} />
+                ))}
+              </div>
+            </section>
+            {/* Fantasy Blowout Skeleton */}
+            <section className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Fantasy Blowout - 50% Off</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <BookCardSkeleton key={i} />
+                ))}
+              </div>
+            </section>
+            {/* Non-Fiction Deals Skeleton */}
+            <section className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Non-Fiction Deals - 30% Off</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <BookCardSkeleton key={i} />
+                ))}
+              </div>
+            </section>
+            {/* Campaigns & Promotions Skeleton */}
+            <section className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">More Exciting Campaigns</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {campaignAds.map((_, i) => (
+                  <div key={i} className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
+                    <div className="w-full h-24 bg-gray-200"></div>
+                    <div className="p-4 space-y-2">
+                      <div className="w-3/4 h-4 bg-gray-200 rounded"></div>
+                      <div className="w-1/2 h-3 bg-gray-200 rounded"></div>
+                      <div className="w-1/3 h-3 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </main>
         </div>
         <Footer />
       </div>
@@ -305,7 +404,7 @@ const SpecialOffersPage = () => {
         <div className="absolute inset-0 bg-black opacity-50 z-10"></div>
         <div className="relative z-20 text-center">
           <h1 className="text-4xl font-bold">Mega Flash Sale Extravaganza</h1>
-          <p className="text-md mt-3">Over a million books at unbeatable prices—shop now before time runs out!</p>
+          <p className="text-md mt-3">Over 500,000 books at unbeatable prices—shop now before time runs out!</p>
         </div>
       </header>
 
@@ -355,12 +454,17 @@ const SpecialOffersPage = () => {
           <div className="bg-red-600 text-white rounded-lg shadow-md p-4 mb-4 text-center animate-pulse">
             <p className="text-lg font-semibold">Hurry! Fiction sale ends soon!</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {fictionBooks.map((book) => (
-              <BookCard key={book.id} book={book} saleType="Fiction Frenzy" />
-            ))}
-            {fictionBooks.length === 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {isLoading ? (
+              [...Array(6)].map((_, i) => (
+                <BookCardSkeleton key={i} />
+              ))
+            ) : fictionBooks.length === 0 ? (
               <p className="text-center text-gray-500 py-6 col-span-full">No Fiction books available.</p>
+            ) : (
+              fictionBooks.map((book) => (
+                <BookCard key={book.id} book={book} saleType="Fiction Frenzy" />
+              ))
             )}
           </div>
         </section>
@@ -371,12 +475,17 @@ const SpecialOffersPage = () => {
           <div className="bg-purple-600 text-white rounded-lg shadow-md p-4 mb-4 text-center animate-pulse">
             <p className="text-lg font-semibold">Grab these fantasy deals before they vanish!</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {fantasyBooks.map((book) => (
-              <BookCard key={book.id} book={book} saleType="Fantasy Blowout" />
-            ))}
-            {fantasyBooks.length === 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {isLoading ? (
+              [...Array(6)].map((_, i) => (
+                <BookCardSkeleton key={i} />
+              ))
+            ) : fantasyBooks.length === 0 ? (
               <p className="text-center text-gray-500 py-6 col-span-full">No Fantasy books available.</p>
+            ) : (
+              fantasyBooks.map((book) => (
+                <BookCard key={book.id} book={book} saleType="Fantasy Blowout" />
+              ))
             )}
           </div>
         </section>
@@ -387,12 +496,17 @@ const SpecialOffersPage = () => {
           <div className="bg-blue-600 text-white rounded-lg shadow-md p-4 mb-4 text-center animate-pulse">
             <p className="text-lg font-semibold">Expand your knowledge with these deals!</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {nonFictionBooks.map((book) => (
-              <BookCard key={book.id} book={book} saleType="Non-Fiction Deals" />
-            ))}
-            {nonFictionBooks.length === 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {isLoading ? (
+              [...Array(6)].map((_, i) => (
+                <BookCardSkeleton key={i} />
+              ))
+            ) : nonFictionBooks.length === 0 ? (
               <p className="text-center text-gray-500 py-6 col-span-full">No Non-Fiction books available.</p>
+            ) : (
+              nonFictionBooks.map((book) => (
+                <BookCard key={book.id} book={book} saleType="Non-Fiction Deals" />
+              ))
             )}
           </div>
         </section>
@@ -423,7 +537,7 @@ const SpecialOffersPage = () => {
                 <div className="p-4">
                   <h3 className="font-semibold text-gray-800 text-sm">{ad.title}</h3>
                   <p className="text-xs text-gray-600">{ad.description}</p>
-                  <Link to={ad.link} className="text-red-600 text-xs font-medium hover:underline mt-2 inline-block animate-pulse">
+                  <Link to={ad.link} className="text-red-600 text-xs font-medium hover:underline mt-2 inline-block">
                     Shop Now
                   </Link>
                 </div>
@@ -448,6 +562,13 @@ const SpecialOffersPage = () => {
         }
         .animate-bounce {
           animation: bounce 1s infinite;
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        .animate-pulse {
+          animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
       `}</style>
     </div>
