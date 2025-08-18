@@ -1,7 +1,10 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+"use client";
+
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/authContext';
 import { useCart } from '../context/cartContext';
+import toast from 'react-hot-toast';
 
 // --- SVG ICONS --- //
 const SearchIcon = (props) => (
@@ -46,6 +49,80 @@ const XIcon = (props) => (
   </svg>
 );
 
+const StarIcon = ({ filled, rating }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill={filled ? "currentColor" : "none"}
+    stroke={filled ? "#facc15" : "#d1d5db"}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={filled ? "text-yellow-400" : "text-gray-300"}
+  >
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
+
+// --- Search Result Card --- //
+const SearchResultCard = ({ id, imageUrl, title, author, price, rating, onSelect }) => {
+  const { addToCart } = useCart();
+  const navigate = useNavigate();
+  const numericPrice = typeof price === "string" ? parseFloat(price.replace("£", "")) : price;
+
+  const handleAddToCart = (e) => {
+    e.stopPropagation(); // Prevent navigation when clicking Add to Basket
+    addToCart({
+      id,
+      imageUrl,
+      title,
+      author,
+      price: `£${numericPrice.toFixed(2)}`,
+      quantity: 1,
+    });
+    toast.success(`${title} added to your basket!`);
+  };
+
+  // Handle navigation and clear search
+  const handleClick = () => {
+    if (id && id !== 'unknown') {
+      navigate(`/browse/${id}`);
+      onSelect(); // Clear search query and results
+    }
+  };
+
+  return (
+    <div
+      className="flex items-center p-2 border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
+      onClick={handleClick}
+    >
+      <img
+        src={imageUrl || "https://via.placeholder.com/150"}
+        alt={title}
+        className="w-12 h-16 object-cover rounded-md mr-3"
+      />
+      <div className="flex-1">
+        <h3 className="text-sm font-semibold truncate">{title}</h3>
+        <p className="text-xs text-gray-500">{author}</p>
+        <div className="flex items-center text-gray-300">
+          {[...Array(5)].map((_, i) => (
+            <StarIcon key={i} filled={i < Math.round(rating)} rating={rating} />
+          ))}
+        </div>
+        <p className="text-sm font-bold text-gray-900">£{numericPrice.toFixed(2)}</p>
+      </div>
+      <button
+        onClick={handleAddToCart}
+        className="bg-red-600 text-white font-medium px-2 py-1 rounded-md text-xs hover:bg-red-700"
+      >
+        Add to Basket
+      </button>
+    </div>
+  );
+};
+
 // --- TOPBAR COMPONENT --- //
 const TopBar = () => {
   const authContext = React.useContext(AuthContext);
@@ -53,12 +130,86 @@ const TopBar = () => {
   const user = authContext?.auth.user;
   const logout = authContext?.logout;
   const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const searchRef = useRef(null); // Ref for search input and dropdown
 
   const isActive = (path) => location.pathname === path;
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+    if (isMobileMenuOpen) {
+      setSearchQuery('');
+      setSearchResults([]);
+    }
+  };
+
+  // Clear search query and results
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+
+  // Handle clicks outside search input/dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        clearSearch();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Debounced search function
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery.trim()) {
+        setIsLoading(true);
+        setError(null);
+        fetch(`https://britbooks-api-production.up.railway.app/api/market/search?keyword=${encodeURIComponent(searchQuery)}`)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error('Search request failed');
+            }
+            return response.json();
+          })
+          .then((data) => {
+            // Normalize API response and map to expected fields
+            const results = Array.isArray(data) ? data : data.results || [];
+            const mappedResults = results.map((book) => ({
+              id: book._id || book.bookId || book.id || 'unknown',
+              imageUrl: book.imageUrl || book.coverImage || book.samplePageUrls?.[0] || '',
+              title: book.title || book.name || 'Untitled',
+              author: book.author || book.authors || 'Unknown Author',
+              price: book.price || 0,
+              rating: book.rating || 0,
+            }));
+            setSearchResults(mappedResults);
+            setIsLoading(false);
+          })
+          .catch((err) => {
+            setError('Failed to fetch search results. Please try again.');
+            setIsLoading(false);
+            console.error('Error fetching search results:', err);
+          });
+      } else {
+        setSearchResults([]);
+        setError(null);
+      }
+    }, 300); // 300ms debounce delay
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const handleInputChange = (e) => {
+    setSearchQuery(e.target.value);
   };
 
   // Navigation links for both desktop and mobile
@@ -108,13 +259,41 @@ const TopBar = () => {
           </div>
 
           {/* Search Bar */}
-          <div className="p-4 border-b">
+          <div className="p-4 border-b" ref={searchRef}>
             <div className="relative">
-              <input type="text" placeholder="Search For Books..." className="w-full py-2 px-4 border rounded-md"/>
+              <input 
+                type="text" 
+                placeholder="Search For Books..." 
+                className="w-full py-2 px-4 border rounded-md"
+                value={searchQuery}
+                onChange={handleInputChange}
+              />
               <button className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                 <SearchIcon className="h-5 w-5"/>
               </button>
             </div>
+            {/* Search Results Dropdown */}
+            {searchQuery.trim() && (
+              <div className="absolute left-0 right-0 top-full bg-white border border-gray-200 shadow-lg max-h-96 overflow-y-auto z-50 mt-2">
+                {isLoading && <p className="p-4 text-gray-500 text-center">Loading...</p>}
+                {error && <p className="p-4 text-red-500 text-center">{error}</p>}
+                {!isLoading && !error && (!Array.isArray(searchResults) || searchResults.length === 0) && (
+                  <p className="p-4 text-gray-500 text-center">No results found.</p>
+                )}
+                {!isLoading && !error && Array.isArray(searchResults) && searchResults.map((book) => (
+                  <SearchResultCard
+                    key={book.id}
+                    id={book.id}
+                    imageUrl={book.imageUrl}
+                    title={book.title}
+                    author={book.author}
+                    price={`£${book.price.toFixed(2)}`}
+                    rating={book.rating}
+                    onSelect={clearSearch}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Navigation Links */}
@@ -168,17 +347,41 @@ const TopBar = () => {
           <div className="hidden sm:block h-24 sm:h-24 w-44 sm:w-60 flex-shrink-0"></div>
 
           {/* Search (Visible only on desktop) */}
-          <div className="hidden sm:block w-full sm:max-w-lg mx-0 sm:mx-4 mt-2 sm:mt-0">
+          <div className="hidden sm:block w-full sm:max-w-lg mx-0 sm:mx-4 mt-2 sm:mt-0 relative" ref={searchRef}>
             <div className="relative">
               <input
                 type="text"
                 placeholder="Search For Books"
                 className="w-full py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+                value={searchQuery}
+                onChange={handleInputChange}
               />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 muchacho">
+              <button className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 <SearchIcon className="h-5 w-5" />
               </button>
             </div>
+            {/* Search Results Dropdown */}
+            {searchQuery.trim() && (
+              <div className="absolute left-0 right-0 top-full bg-white border border-gray-200 shadow-lg max-h-96 overflow-y-auto z-50 mt-2">
+                {isLoading && <p className="p-4 text-gray-500 text-center">Loading...</p>}
+                {error && <p className="p-4 text-red-500 text-center">{error}</p>}
+                {!isLoading && !error && (!Array.isArray(searchResults) || searchResults.length === 0) && (
+                  <p className="p-4 text-gray-500 text-center">No results found.</p>
+                )}
+                {!isLoading && !error && Array.isArray(searchResults) && searchResults.map((book) => (
+                  <SearchResultCard
+                    key={book.id}
+                    id={book.id}
+                    imageUrl={book.imageUrl}
+                    title={book.title}
+                    author={book.author}
+                    price={`£${book.price.toFixed(2)}`}
+                    rating={book.rating}
+                    onSelect={clearSearch}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Phone Number (Visible only on desktop) */}

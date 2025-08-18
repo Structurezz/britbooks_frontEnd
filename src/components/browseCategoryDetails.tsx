@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
+import axios from "axios";
 import TopBar from "../components/Topbar";
 import Footer from "../components/footer";
 import {
@@ -13,9 +14,9 @@ import {
   ChevronRight,
   ShoppingCart,
 } from "lucide-react";
-import { fetchBooks, Book } from "../data/books";
 import toast, { Toaster } from "react-hot-toast";
 import { useCart } from "../context/cartContext";
+import { Book, fetchBooks } from "../data/books";
 
 // --- SVG ICONS ---
 const StarIcon = ({ filled, rating }: { filled: boolean; rating: number }) => (
@@ -57,7 +58,7 @@ const BookCard = ({ id, imageUrl, title, author, price, rating }: Book & { price
       <div className="relative">
         <Link to={`/browse/${id}`}>
           <img
-            src={imageUrl || "https://via.placeholder.com/150"}
+            src={imageUrl || "https://media.istockphoto.com/id/2166128139/vector/modern-annual-report-cover-book-business-template-design.jpg?s=612x612&w=0&k=20&c=-OtjHOz2K389qHnIo8mcUXCrGpKo3I0uJoICB2SSTik="}
             alt={title}
             className="w-full h-48 object-cover mb-2 rounded-md transition-transform duration-300 group-hover:scale-105"
           />
@@ -75,7 +76,7 @@ const BookCard = ({ id, imageUrl, title, author, price, rating }: Book & { price
         <p className="text-gray-500 text-xs mb-1">{author}</p>
         <div className="flex items-center text-gray-300 mb-1">
           {[...Array(5)].map((_, i) => (
-            <StarIcon key={i} filled={i < Math.round(rating)} rating={rating} />
+            <StarIcon key={i} filled={i < Math.round(rating || 0)} rating={rating || 0} />
           ))}
         </div>
         <p className="text-lg font-bold text-gray-900">£{numericPrice.toFixed(2)}</p>
@@ -91,7 +92,7 @@ const BookCard = ({ id, imageUrl, title, author, price, rating }: Book & { price
 };
 
 // BookShelf Component with Pagination
-const BookShelf = ({ title, fetchParams }: { title: string; fetchParams: any }) => {
+const BookShelf = ({ title, fetchParams, currentBookId }: { title: string; fetchParams: any; currentBookId: string }) => {
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,8 +105,13 @@ const BookShelf = ({ title, fetchParams }: { title: string; fetchParams: any }) 
       setIsLoading(true);
       setError(null);
       try {
-        const { books: fetchedBooks } = await fetchBooks({ page: 1, limit: 10, ...fetchParams });
-        setBooks(fetchedBooks);
+        const { books: fetchedBooks } = await fetchBooks({
+          page: 1,
+          limit: 10,
+          ...fetchParams,
+        });
+        const filteredBooks = fetchedBooks.filter((book) => book.id !== currentBookId);
+        setBooks(filteredBooks);
         setIsLoading(false);
       } catch (err) {
         setError(`Failed to load ${title.toLowerCase()}. Please try again.`);
@@ -114,7 +120,7 @@ const BookShelf = ({ title, fetchParams }: { title: string; fetchParams: any }) 
       }
     };
     fetchShelfBooks();
-  }, [fetchParams, title]);
+  }, [fetchParams, title, currentBookId]);
 
   const totalPages = Math.min(Math.ceil(books.length / booksPerPage), maxPages);
   const startIndex = (currentPage - 1) * booksPerPage;
@@ -197,31 +203,41 @@ const BrowseCategoryDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<"details" | "info" | "reviews">("details");
 
+  const FALLBACK_IMAGE =
+    "https://media.istockphoto.com/id/2166128139/vector/modern-annual-report-cover-book-business-template-design.jpg?s=612x612&w=0&k=20&c=-OtjHOz2K389qHnIo8mcUXCrGpKo3I0uJoICB2SSTik=";
+
   useEffect(() => {
     const findBookById = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        let foundBook: Book | null = null;
-        const maxPagesToSearch = 10; // Limit search to avoid excessive API calls
-        for (let page = 1; page <= maxPagesToSearch; page++) {
-          const { books } = await fetchBooks({ page, limit: 100 });
-          foundBook = books.find((b) => b.id === id) || null;
-          if (foundBook) break;
-          if (books.length < 100) break; // Stop if no more books
+        const response = await axios.get(`https://britbooks-api-production.up.railway.app/api/market/${id}`);
+        if (!response.data.success || !response.data.listing) {
+          throw new Error("Book not found in API response.");
         }
-
-        if (foundBook) {
-          setBook(foundBook);
-          setIsLoading(false);
-        } else {
-          setError("Book not found.");
-          setIsLoading(false);
-        }
+        const bookData = response.data.listing;
+        const foundBook: Book = {
+          id: String(bookData._id || bookData.id),
+          title: bookData.title || "Untitled",
+          author: bookData.author || "Unknown Author",
+          price: bookData.price || 0,
+          imageUrl: bookData.samplePageUrls?.[0] || bookData.coverImageUrl || FALLBACK_IMAGE,
+          genre: bookData.category || "N/A",
+          condition: bookData.condition || "N/A",
+          description: bookData.description || "",
+          stock: bookData.stock || 0,
+          rating: bookData.rating || 4.5,
+          isbn: bookData.isbn || "",
+          pages: bookData.pages || 300,
+          releaseDate: bookData.listedAt || "",
+        };
+        setBook(foundBook);
+        setIsLoading(false);
       } catch (err) {
         setError("Failed to load book details. Please try again later.");
         setIsLoading(false);
         console.error("❌ Failed to fetch book:", err instanceof Error ? err.message : err);
+        toast.error(err instanceof Error ? err.message : "Failed to load book details.");
       }
     };
     findBookById();
@@ -231,7 +247,7 @@ const BrowseCategoryDetail = () => {
     if (book) {
       addToCart({
         id: book.id,
-        imageUrl: book.imageUrl || "https://via.placeholder.com/150",
+        imageUrl: book.imageUrl || FALLBACK_IMAGE,
         title: book.title,
         author: book.author,
         price: `£${book.price.toFixed(2)}`,
@@ -260,7 +276,7 @@ const BrowseCategoryDetail = () => {
         <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
         <TopBar />
         <div className="container mx-auto px-4 sm:px-8 py-8 text-center">
-          <p className="text-red-500 text-lg">{error || "Book not found."}</p>
+          <p className="text-red-500 text-lg">{error || "Book not found. It may not be available."}</p>
           <button
             onClick={() => navigate("/category")}
             className="text-blue-600 hover:underline mt-4"
@@ -287,7 +303,7 @@ const BrowseCategoryDetail = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="relative">
             <img
-              src={book.imageUrl || "https://via.placeholder.com/150"}
+              src={book.imageUrl || FALLBACK_IMAGE}
               alt={`Cover of ${book.title}`}
               className="w-full h-80 object-contain rounded-lg shadow-sm"
             />
@@ -300,7 +316,7 @@ const BrowseCategoryDetail = () => {
             <div className="flex items-center mb-3 text-sm">
               <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (
-                  <StarIcon key={i} filled={i < Math.round(book.rating)} rating={book.rating} />
+                  <StarIcon key={i} filled={i < Math.round(book.rating || 0)} rating={book.rating || 0} />
                 ))}
               </div>
               <a
@@ -446,10 +462,12 @@ const BrowseCategoryDetail = () => {
         <BookShelf
           title="You may also like"
           fetchParams={{ filters: { genre: book.genre }, sort: "rating", order: "desc" }}
+          currentBookId={id}
         />
         <BookShelf
           title="Related Products"
           fetchParams={{ filters: { genre: book.genre }, sort: "createdAt", order: "desc" }}
+          currentBookId={id}
         />
       </main>
       <Footer />
