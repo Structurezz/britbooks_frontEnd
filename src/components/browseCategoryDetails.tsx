@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import axios from "axios";
+import { MD5 } from "crypto-js"; // For generating unique seeds
 import TopBar from "../components/Topbar";
 import Footer from "../components/footer";
 import {
@@ -17,6 +18,40 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import { useCart } from "../context/cartContext";
 import { Book, fetchBooks } from "../data/books";
+
+// --- Helper Function for Placeholder Images ---
+const generatePlaceholderImage = (book: { title: string; isbn: string; genre: string }): string => {
+  // Create a hash from ISBN or title to use as a seed for Picsum
+  const input = book.isbn || book.title;
+  const hash = MD5(input).toString().slice(0, 8); // Use first 8 chars of MD5 hash
+
+  // Map genre to a keyword for visual distinction
+  const genreColors: Record<string, string> = {
+    Mindfulness: "zen",
+    Technology: "tech",
+    Psychology: "psych",
+    "Self-Help": "selfhelp",
+    Mystery: "mystery",
+    "Contemporary Fiction": "fiction",
+    Drama: "drama",
+    Biography: "bio",
+    Leadership: "lead",
+    "Asian Literature": "asianlit",
+    Entrepreneurship: "entrepreneur",
+    Poetry: "poetry",
+    Humor: "humor",
+    History: "history",
+    Cookbooks: "cook",
+    Art: "art",
+    Comics: "comics",
+    default: "default",
+  };
+
+  const genreKey = genreColors[book.genre] || genreColors.default;
+
+  // Use Lorem Picsum with the hash as a seed for unique images
+  return `https://picsum.photos/seed/${hash}-${genreKey}/300/450`;
+};
 
 // --- SVG ICONS ---
 const StarIcon = ({ filled, rating }: { filled: boolean; rating: number }) => (
@@ -36,15 +71,24 @@ const StarIcon = ({ filled, rating }: { filled: boolean; rating: number }) => (
   </svg>
 );
 
-// Book Card Component
-const BookCard = ({ id, imageUrl, title, author, price, rating }: Book & { price: string }) => {
+// --- Book Card Component ---
+const BookCard = ({ id, imageUrl, title, author, price, rating, isbn, genre }: Book & { price: string }) => {
   const { addToCart } = useCart();
+  const [imageError, setImageError] = useState(false);
   const numericPrice = typeof price === "string" ? parseFloat(price.replace("£", "")) : price;
+
+  // Fallback image if both primary and Picsum images fail
+  const fallbackImage = "https://placehold.co/300x450?text=Book+Cover";
+
+  // Use provided imageUrl or generate a placeholder
+  const displayImage = imageError
+    ? fallbackImage
+    : imageUrl || generatePlaceholderImage({ title, isbn, genre });
 
   const handleAddToCart = () => {
     addToCart({
       id,
-      imageUrl,
+      imageUrl: displayImage,
       title,
       author,
       price: `£${numericPrice.toFixed(2)}`,
@@ -58,9 +102,11 @@ const BookCard = ({ id, imageUrl, title, author, price, rating }: Book & { price
       <div className="relative">
         <Link to={`/browse/${id}`}>
           <img
-            src={imageUrl || "https://media.istockphoto.com/id/2166128139/vector/modern-annual-report-cover-book-business-template-design.jpg?s=612x612&w=0&k=20&c=-OtjHOz2K389qHnIo8mcUXCrGpKo3I0uJoICB2SSTik="}
+            src={displayImage}
             alt={title}
             className="w-full h-48 object-cover mb-2 rounded-md transition-transform duration-300 group-hover:scale-105"
+            onError={() => setImageError(true)}
+            loading="lazy"
           />
         </Link>
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
@@ -91,7 +137,7 @@ const BookCard = ({ id, imageUrl, title, author, price, rating }: Book & { price
   );
 };
 
-// BookShelf Component with Pagination
+// --- BookShelf Component with Pagination ---
 const BookShelf = ({ title, fetchParams, currentBookId }: { title: string; fetchParams: any; currentBookId: string }) => {
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -202,9 +248,9 @@ const BrowseCategoryDetail = () => {
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<"details" | "info" | "reviews">("details");
+  const [imageError, setImageError] = useState(false);
 
-  const FALLBACK_IMAGE =
-    "https://media.istockphoto.com/id/2166128139/vector/modern-annual-report-cover-book-business-template-design.jpg?s=612x612&w=0&k=20&c=-OtjHOz2K389qHnIo8mcUXCrGpKo3I0uJoICB2SSTik=";
+  const FALLBACK_IMAGE = "https://placehold.co/300x450?text=Book+Cover";
 
   useEffect(() => {
     const findBookById = async () => {
@@ -221,7 +267,11 @@ const BrowseCategoryDetail = () => {
           title: bookData.title || "Untitled",
           author: bookData.author || "Unknown Author",
           price: bookData.price || 0,
-          imageUrl: bookData.samplePageUrls?.[0] || bookData.coverImageUrl || FALLBACK_IMAGE,
+          imageUrl: bookData.samplePageUrls?.[0] || bookData.coverImageUrl || generatePlaceholderImage({
+            title: bookData.title || "Untitled",
+            isbn: bookData.isbn || "",
+            genre: bookData.category || "default",
+          }),
           genre: bookData.category || "N/A",
           condition: bookData.condition || "N/A",
           description: bookData.description || "",
@@ -247,7 +297,7 @@ const BrowseCategoryDetail = () => {
     if (book) {
       addToCart({
         id: book.id,
-        imageUrl: book.imageUrl || FALLBACK_IMAGE,
+        imageUrl: imageError ? FALLBACK_IMAGE : book.imageUrl,
         title: book.title,
         author: book.author,
         price: `£${book.price.toFixed(2)}`,
@@ -303,9 +353,11 @@ const BrowseCategoryDetail = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="relative">
             <img
-              src={book.imageUrl || FALLBACK_IMAGE}
+              src={imageError ? FALLBACK_IMAGE : book.imageUrl}
               alt={`Cover of ${book.title}`}
               className="w-full h-80 object-contain rounded-lg shadow-sm"
+              onError={() => setImageError(true)}
+              loading="lazy"
             />
           </div>
 

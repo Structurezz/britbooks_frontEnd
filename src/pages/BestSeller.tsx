@@ -153,11 +153,11 @@ const BestsellersPage: React.FC = () => {
   // Sample categories (replace with actual data fetching if available)
   const categories = useMemo(
     () => [
-      { id: "fiction", name: "Fiction", imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4ebf0c?auto=format&fit=crop&w=300&q=80" },
-      { id: "non-fiction", name: "Non-Fiction", imageUrl: "https://images.unsplash.com/photo-1589994965851-d2c3c984513a?auto=format&fit=crop&w=300&q=80" },
-      { id: "mystery", name: "Mystery & Thriller", imageUrl: "https://images.unsplash.com/photo-1592497971838-4a8e8c759f27?auto=format&fit=crop&w=300&q=80" },
+      { id: "fiction", name: "Fiction", imageUrl: "https://media.istockphoto.com/id/1893527682/photo/woman-standing-in-front-of-glowing-portals.jpg?s=612x612&w=0&k=20&c=O8pICCRgPN0eIO5hZ02MfvNHeoBvkDtaI5Cqwwk-va4=" },
+      { id: "non-fiction", name: "Non-Fiction", imageUrl: "https://media.istockphoto.com/id/2022778486/photo/creative-colored-light-bulb-explosion-with-shards-and-paint-a-creative-idea-think-different.jpg?s=612x612&w=0&k=20&c=L-uilgLzXAGT6La9AdjovX8UFtx9qzD3i-nMpOjankU=" },
+      { id: "mystery", name: "Mystery & Thriller", imageUrl: "https://media.istockphoto.com/id/2212586587/photo/walking-into-the-era-of-digital-evolution.jpg?s=612x612&w=0&k=20&c=zgDkgZQQQchLou7Ibhgoz5ZeYwftc9aNzzxLAnramNY=" },
       { id: "sci-fi", name: "Science Fiction", imageUrl: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=300&q=80" },
-      { id: "romance", name: "Romance", imageUrl: "https://images.unsplash.com/photo-1516972810927-801f7c4553c0?auto=format&fit=crop&w=300&q=80" },
+      { id: "romance", name: "Romance", imageUrl: "https://media.istockphoto.com/id/1806153068/photo/people-holding-hands-and-closeup-on-table-for-care-love-or-retirement-support-compassion-or.jpg?s=612x612&w=0&k=20&c=1cX811GKLIKylZoU6xQn4QgyqgnlS_n2ib9GmEZ-YCs=" },
     ],
     []
   );

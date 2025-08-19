@@ -1,4 +1,5 @@
 import axios from "axios";
+import { MD5 } from "crypto-js"; // For generating unique seeds
 
 export interface Book {
   id: string;
@@ -6,7 +7,7 @@ export interface Book {
   author: string;
   price: number;
   imageUrl?: string;
-  genre: string; // Maps to API's `category`
+  genre: string;
   condition: string;
   description?: string;
   stock: number;
@@ -24,6 +25,40 @@ interface FetchBooksParams {
   filters?: Record<string, any>;
 }
 
+// Function to generate a unique placeholder image URL using Lorem Picsum
+const generatePlaceholderImage = (book: { title: string; isbn: string; genre: string }): string => {
+  // Create a hash from ISBN or title to use as a seed for Picsum
+  const input = book.isbn || book.title;
+  const hash = MD5(input).toString().slice(0, 8); // Use first 8 chars of MD5 hash
+
+  // Map genre to a keyword (optional, for future customization if needed)
+  const genreColors: Record<string, string> = {
+    Mindfulness: "zen",
+    Technology: "tech",
+    Psychology: "psych",
+    "Self-Help": "selfhelp",
+    Mystery: "mystery",
+    "Contemporary Fiction": "fiction",
+    Drama: "drama",
+    Biography: "bio",
+    Leadership: "lead",
+    "Asian Literature": "asianlit",
+    Entrepreneurship: "entrepreneur",
+    Poetry: "poetry",
+    Humor: "humor",
+    History: "history",
+    Cookbooks: "cook",
+    Art: "art",
+    Comics: "comics",
+    default: "default",
+  };
+
+  const genreKey = genreColors[book.genre] || genreColors.default;
+
+  // Use Lorem Picsum with the hash as a seed for unique images
+  return `https://picsum.photos/seed/${hash}-${genreKey}/300/450`;
+};
+
 export const fetchBooks = async ({ page, limit, sort, order, filters }: FetchBooksParams): Promise<{ books: Book[]; total: number }> => {
   try {
     const params: Record<string, any> = {
@@ -33,9 +68,8 @@ export const fetchBooks = async ({ page, limit, sort, order, filters }: FetchBoo
       order: order || "desc",
     };
 
-    // Map filters to API query parameters
     if (filters) {
-      if (filters.genre) params.category = filters.genre; // API uses `category`
+      if (filters.genre) params.category = filters.genre;
       if (filters.condition) params.condition = filters.condition;
       if (filters.priceMin != null) params.priceMin = filters.priceMin;
       if (filters.priceMax != null) params.priceMax = filters.priceMax;
@@ -46,29 +80,29 @@ export const fetchBooks = async ({ page, limit, sort, order, filters }: FetchBoo
       params,
     });
 
-    const FALLBACK_IMAGE =
-  "https://media.istockphoto.com/id/2166128139/vector/modern-annual-report-cover-book-business-template-design.jpg?s=612x612&w=0&k=20&c=-OtjHOz2K389qHnIo8mcUXCrGpKo3I0uJoICB2SSTik=";
-
-
     const books: Book[] = response.data.listings.map((listing: any) => ({
       id: listing._id,
       title: listing.title,
       author: listing.author,
       price: listing.price,
-      imageUrl: listing.samplePageUrls?.[0] || FALLBACK_IMAGE,
-      genre: listing.category, // Map API's `category` to `genre`
+      imageUrl: listing.samplePageUrls?.[0] || generatePlaceholderImage({
+        title: listing.title,
+        isbn: listing.isbn,
+        genre: listing.category,
+      }),
+      genre: listing.category,
       condition: listing.condition,
       description: listing.description || "",
       stock: listing.stock,
-      rating: listing.rating || 4.5, // Default rating if not provided
+      rating: listing.rating || 4.5,
       isbn: listing.isbn,
-      pages: listing.pages || 300, // Default if not provided
+      pages: listing.pages || 300,
       releaseDate: listing.listedAt,
     }));
 
     return {
       books,
-      total: response.data.meta?.count || 1000000, // Fallback to 1 million if count is missing
+      total: response.data.meta?.count || 1000000,
     };
   } catch (error) {
     console.error("❌ Error fetching books:", error instanceof Error ? error.message : error);
@@ -76,12 +110,10 @@ export const fetchBooks = async ({ page, limit, sort, order, filters }: FetchBoo
   }
 };
 
-// New function to fetch unique categories
 export const fetchCategories = async (): Promise<string[]> => {
   try {
-    // Fetch a large sample to get diverse categories (e.g., 10,000 books)
     const response = await axios.get("https://britbooks-api-production.up.railway.app/api/market/admin/listings", {
-      params: { page: 1, limit: 10000 }, // Large sample for diversity
+      params: { page: 1, limit: 30000 },
     });
 
     const categories = Array.from(
@@ -91,7 +123,6 @@ export const fetchCategories = async (): Promise<string[]> => {
     return categories;
   } catch (error) {
     console.error("❌ Error fetching categories:", error instanceof Error ? error.message : error);
-    // Fallback categories from the provided API response
     return [
       "Mindfulness",
       "Technology",
