@@ -100,6 +100,12 @@ const OrderDetailsSidebar = ({ isOpen, onClose }) => {
 
         if (response.data.success && response.data.order) {
           const fetchedOrder = response.data.order;
+          const now = new Date();
+          const orderDate = new Date(fetchedOrder.createdAt);
+          const oneMinuteAfterOrder = new Date(orderDate.getTime() + 60 * 1000);
+          const isProcessingCompleted = now >= oneMinuteAfterOrder;
+          const isConfirmedOrCompleted = fetchedOrder.status.toLowerCase() === 'confirmed' || fetchedOrder.status.toLowerCase() === 'completed';
+
           const mappedOrder = {
             id: fetchedOrder._id,
             date: fetchedOrder.createdAt,
@@ -107,9 +113,10 @@ const OrderDetailsSidebar = ({ isOpen, onClose }) => {
             status: fetchedOrder.status.charAt(0).toUpperCase() + fetchedOrder.status.slice(1),
             hasDetails: fetchedOrder.items.length > 0,
             items: fetchedOrder.items.map((item) => ({
-              title: item.listing || 'Unknown Item',
+              title: item.title || 'Unknown Item', // Use item.title directly
               quantity: item.quantity,
-              price: item.priceAtPurchase,
+              priceAtPurchase: item.priceAtPurchase,
+              author: item.author || 'Unknown', // Include author
             })),
             shippingAddress: {
               name: fetchedOrder.shippingAddress.fullName,
@@ -120,15 +127,35 @@ const OrderDetailsSidebar = ({ isOpen, onClose }) => {
             },
             paymentDetails: {
               method: fetchedOrder.payment.method.charAt(0).toUpperCase() + fetchedOrder.payment.method.slice(1),
-              status: fetchedOrder.payment.status.charAt(0).toUpperCase() + fetchedOrder.payment.status.slice(1),
+              status: fetchedOrder.payment.status.charAt(0).toUpperCase() + fetchedOrder.payment.status.slice(1), // Use backend status
             },
             tracking: [
               { status: 'Ordered', date: fetchedOrder.createdAt, location: 'Order placed online', completed: true },
-              { status: 'Processing', date: fetchedOrder.createdAt, location: 'Warehouse', completed: fetchedOrder.status !== 'pending' },
-              { status: 'Dispatched', date: null, location: 'Sorting Facility', completed: fetchedOrder.status === 'completed' },
-              { status: 'In Transit', date: null, location: 'En route to delivery hub', completed: false },
+              {
+                status: 'Processing',
+                date: isProcessingCompleted ? new Date(orderDate.getTime() + 60 * 1000).toISOString() : null,
+                location: 'Warehouse',
+                completed: isProcessingCompleted,
+              },
+              {
+                status: 'Dispatched',
+                date: isConfirmedOrCompleted ? new Date(orderDate.getTime() + 2 * 60 * 1000).toISOString() : null,
+                location: 'Sorting Facility',
+                completed: isConfirmedOrCompleted,
+              },
+              {
+                status: 'In Transit',
+                date: isConfirmedOrCompleted ? new Date(orderDate.getTime() + 3 * 60 * 1000).toISOString() : null,
+                location: 'En route to delivery hub',
+                completed: isConfirmedOrCompleted,
+              },
               { status: 'Out for Delivery', date: null, location: 'Local Delivery Hub', completed: false },
-              { status: 'Delivered', date: null, location: 'Delivered to address', completed: fetchedOrder.status === 'completed' },
+              {
+                status: 'Delivered',
+                date: fetchedOrder.status.toLowerCase() === 'completed' ? new Date(orderDate.getTime() + 4 * 60 * 1000).toISOString() : null,
+                location: 'Delivered to address',
+                completed: fetchedOrder.status.toLowerCase() === 'completed',
+              },
             ],
           };
           setOrder(mappedOrder);
@@ -255,9 +282,10 @@ const OrderDetailsSidebar = ({ isOpen, onClose }) => {
                   <div key={index} className="flex justify-between items-center border-b pb-2">
                     <div>
                       <p className="text-xs sm:text-sm font-semibold text-gray-800">{item.title}</p>
+                      <p className="text-xs text-gray-600">Author: {item.author}</p>
                       <p className="text-xs text-gray-600">Quantity: {item.quantity}</p>
                     </div>
-                    <p className="text-xs sm:text-sm font-semibold text-gray-800">£{(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="text-xs sm:text-sm font-semibold text-gray-800">£{(item.priceAtPurchase * item.quantity).toFixed(2)}</p>
                   </div>
                 ))}
               </div>
@@ -341,37 +369,65 @@ const MainContent = ({ setOrders }) => {
 
         if (response.data.success) {
           // Map API response to match UI structure
-          const mappedOrders = response.data.orders.map((order) => ({
-            id: order._id,
-            date: order.createdAt,
-            total: order.total,
-            status: order.status.charAt(0).toUpperCase() + order.status.slice(1),
-            hasDetails: order.items.length > 0,
-            items: order.items.map((item) => ({
-              title: item.listing || 'Unknown Item',
-              quantity: item.quantity,
-              price: item.priceAtPurchase,
-            })),
-            shippingAddress: {
-              name: order.shippingAddress.fullName,
-              street: order.shippingAddress.addressLine1,
-              city: order.shippingAddress.city,
-              postalCode: order.shippingAddress.postalCode,
-              country: order.shippingAddress.country,
-            },
-            paymentDetails: {
-              method: order.payment.method.charAt(0).toUpperCase() + order.payment.method.slice(1),
-              status: order.payment.status.charAt(0).toUpperCase() + order.payment.status.slice(1),
-            },
-            tracking: [
-              { status: 'Ordered', date: order.createdAt, location: 'Order placed online', completed: true },
-              { status: 'Processing', date: order.createdAt, location: 'Warehouse', completed: order.status !== 'pending' },
-              { status: 'Dispatched', date: null, location: 'Sorting Facility', completed: order.status === 'completed' },
-              { status: 'In Transit', date: null, location: 'En route to delivery hub', completed: false },
-              { status: 'Out for Delivery', date: null, location: 'Local Delivery Hub', completed: false },
-              { status: 'Delivered', date: null, location: 'Delivered to address', completed: order.status === 'completed' },
-            ],
-          }));
+          const mappedOrders = response.data.orders.map((order) => {
+            const now = new Date();
+            const orderDate = new Date(order.createdAt);
+            const oneMinuteAfterOrder = new Date(orderDate.getTime() + 60 * 1000);
+            const isProcessingCompleted = now >= oneMinuteAfterOrder;
+            const isConfirmedOrCompleted = order.status.toLowerCase() === 'confirmed' || order.status.toLowerCase() === 'completed';
+
+            return {
+              id: order._id,
+              date: order.createdAt,
+              total: order.total,
+              status: order.status.charAt(0).toUpperCase() + order.status.slice(1),
+              hasDetails: order.items.length > 0,
+              items: order.items.map((item) => ({
+                title: item.listing?.title || 'Unknown Item', // Correctly extract title
+                quantity: item.quantity,
+                price: item.priceAtPurchase,
+              })),
+              shippingAddress: {
+                name: order.shippingAddress.fullName,
+                street: order.shippingAddress.addressLine1,
+                city: order.shippingAddress.city,
+                postalCode: order.shippingAddress.postalCode,
+                country: order.shippingAddress.country,
+              },
+              paymentDetails: {
+                method: order.payment.method.charAt(0).toUpperCase() + order.payment.method.slice(1),
+                status: 'Paid',
+              },
+              tracking: [
+                { status: 'Ordered', date: order.createdAt, location: 'Order placed online', completed: true },
+                {
+                  status: 'Processing',
+                  date: isProcessingCompleted ? new Date(orderDate.getTime() + 60 * 1000).toISOString() : null,
+                  location: 'Warehouse',
+                  completed: isProcessingCompleted,
+                },
+                {
+                  status: 'Dispatched',
+                  date: isConfirmedOrCompleted ? new Date(orderDate.getTime() + 2 * 60 * 1000).toISOString() : null,
+                  location: 'Sorting Facility',
+                  completed: isConfirmedOrCompleted,
+                },
+                {
+                  status: 'In Transit',
+                  date: isConfirmedOrCompleted ? new Date(orderDate.getTime() + 3 * 60 * 1000).toISOString() : null,
+                  location: 'En route to delivery hub',
+                  completed: isConfirmedOrCompleted,
+                },
+                { status: 'Out for Delivery', date: null, location: 'Local Delivery Hub', completed: false },
+                {
+                  status: 'Delivered',
+                  date: order.status.toLowerCase() === 'completed' ? new Date(orderDate.getTime() + 4 * 60 * 1000).toISOString() : null,
+                  location: 'Delivered to address',
+                  completed: order.status.toLowerCase() === 'completed',
+                },
+              ],
+            };
+          });
           setLocalOrders(mappedOrders);
           setOrders(mappedOrders);
           console.log('Orders loaded successfully.');
