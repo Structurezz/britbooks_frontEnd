@@ -162,11 +162,11 @@ const BookShelf = ({ title, fetchParams, onFilterClick, bookCount, initialBooks 
   }, [fetchParams, currentPage, initialBooks]);
 
   const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= maxPages) {
-      setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+      if (page >= 1 && page <= maxPages) {
+        setCurrentPage(page);
+        shelfRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+     };
 
   return (
     <section className="py-6 sm:py-8 animate-on-scroll">

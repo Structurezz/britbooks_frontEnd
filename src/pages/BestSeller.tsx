@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import TopBar from "../components/Topbar";
 import Footer from "../components/footer";
-import { fetchBooks, Book } from "../data/books";
+import { fetchBooks, fetchCategories, Book } from "../data/books";
 import { useCart } from "../context/cartContext";
 
 // ⭐ Star Rating Component
@@ -48,7 +47,7 @@ interface BookCardProps {
   rank: number;
 }
 
-const BookCard: React.FC<BookCardProps> = ({ book, rank }) => {
+const BookCard: React.FC<BookCardProps> = React.memo(({ book, rank }) => {
   const { addToCart } = useCart();
   const numericPrice = book.price;
   const isTopTen = rank <= 10;
@@ -76,6 +75,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, rank }) => {
           <img
             src={book.imageUrl || "https://via.placeholder.com/150"}
             alt={book.title}
+            loading="lazy"
             className="w-full h-48 object-cover mx-auto transition-transform duration-300 group-hover:scale-105 rounded-t-lg"
           />
         </Link>
@@ -99,6 +99,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, rank }) => {
           {book.title}
         </h4>
         <p className="text-xs text-gray-500 mb-1">{book.author}</p>
+        <p className="text-xs text-gray-500 mb-1">{book.genre}</p>
         <div className="mb-1">
           <StarRating rating={book.rating || 0} />
         </div>
@@ -108,23 +109,29 @@ const BookCard: React.FC<BookCardProps> = ({ book, rank }) => {
         <button
           onClick={handleAddToCart}
           className="w-full bg-red-600 text-white font-medium py-1 rounded-full hover:bg-red-700 transition-colors text-xs focus:outline-none focus:ring-2 focus:ring-red-500"
+          disabled={book.stock === 0}
         >
-          ADD TO BASKET
+          {book.stock === 0 ? "OUT OF STOCK" : "ADD TO BASKET"}
         </button>
       </div>
     </div>
   );
-};
+});
 
-// 📚 Browse by Category Component
-const CategoryCard: React.FC<{ category: { id: string; name: string; imageUrl: string } }> = ({ category }) => {
+// 📚 Category Card Component
+interface CategoryCardProps {
+  category: { id: string; name: string; imageUrl: string };
+}
+
+const CategoryCard: React.FC<CategoryCardProps> = React.memo(({ category }) => {
   return (
-    <Link to={`/category`} className="group">
+    <Link to={`/category/${category.id}`} className="group">
       <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-1">
         <div className="relative">
           <img
             src={category.imageUrl}
             alt={category.name}
+            loading="lazy"
             className="w-full h-32 sm:h-40 object-cover transition-transform duration-300 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
@@ -139,28 +146,17 @@ const CategoryCard: React.FC<{ category: { id: string; name: string; imageUrl: s
       </div>
     </Link>
   );
-};
+});
 
 // 🏆 Main Bestsellers Page Component
 const BestsellersPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [books, setBooks] = useState<Book[]>([]);
   const [totalBooks, setTotalBooks] = useState(0);
+  const [categories, setCategories] = useState<{ id: string; name: string; imageUrl: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const BOOKS_PER_PAGE = 100;
-
-  // Sample categories (replace with actual data fetching if available)
-  const categories = useMemo(
-    () => [
-      { id: "fiction", name: "Fiction", imageUrl: "https://media.istockphoto.com/id/1893527682/photo/woman-standing-in-front-of-glowing-portals.jpg?s=612x612&w=0&k=20&c=O8pICCRgPN0eIO5hZ02MfvNHeoBvkDtaI5Cqwwk-va4=" },
-      { id: "non-fiction", name: "Non-Fiction", imageUrl: "https://media.istockphoto.com/id/2022778486/photo/creative-colored-light-bulb-explosion-with-shards-and-paint-a-creative-idea-think-different.jpg?s=612x612&w=0&k=20&c=L-uilgLzXAGT6La9AdjovX8UFtx9qzD3i-nMpOjankU=" },
-      { id: "mystery", name: "Mystery & Thriller", imageUrl: "https://media.istockphoto.com/id/2212586587/photo/walking-into-the-era-of-digital-evolution.jpg?s=612x612&w=0&k=20&c=zgDkgZQQQchLou7Ibhgoz5ZeYwftc9aNzzxLAnramNY=" },
-      { id: "sci-fi", name: "Science Fiction", imageUrl: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=300&q=80" },
-      { id: "romance", name: "Romance", imageUrl: "https://media.istockphoto.com/id/1806153068/photo/people-holding-hands-and-closeup-on-table-for-care-love-or-retirement-support-compassion-or.jpg?s=612x612&w=0&k=20&c=1cX811GKLIKylZoU6xQn4QgyqgnlS_n2ib9GmEZ-YCs=" },
-    ],
-    []
-  );
+  const BOOKS_PER_PAGE = 100; // Adjusted for performance
 
   useEffect(() => {
     const fetchBestsellers = async () => {
@@ -174,7 +170,7 @@ const BestsellersPage: React.FC = () => {
           order: "desc",
         });
         setBooks(fetchedBooks);
-        setTotalBooks(Math.min(total, 100000));
+        setTotalBooks(total);
         setIsLoading(false);
       } catch (err) {
         setError("Failed to load bestsellers. Please try again.");
@@ -186,11 +182,29 @@ const BestsellersPage: React.FC = () => {
   }, [currentPage]);
 
   useEffect(() => {
+    const fetchCategoryData = async () => {
+      try {
+        const fetchedCategories = await fetchCategories();
+        const categoryObjects = fetchedCategories.map((name, index) => ({
+          id: name.toLowerCase().replace(/\s+/g, "-"),
+          name,
+          imageUrl: `https://picsum.photos/seed/category-${index}/300/200`,
+        }));
+        setCategories(categoryObjects);
+      } catch (err) {
+        console.error("❌ Failed to fetch categories:", err);
+        setCategories([]);
+      }
+    };
+    fetchCategoryData();
+  }, []);
+
+  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classNameList.add("fade-in-up");
+            entry.target.classList.add("fade-in-up");
           }
         });
       },
@@ -230,23 +244,6 @@ const BestsellersPage: React.FC = () => {
     }
     return pages;
   }, [currentPage, totalPages]);
-
-  if (isLoading) {
-    return (
-      <div className="bg-gray-50 font-sans min-h-screen text-gray-800">
-        <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
-        <TopBar />
-        <div className="container mx-auto px-4 sm:px-6 py-8">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
-            {[...Array(BOOKS_PER_PAGE)].map((_, i) => (
-              <BookCardSkeleton key={i} />
-            ))}
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -337,11 +334,22 @@ const BestsellersPage: React.FC = () => {
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 animate-on-scroll">
               Browse by Category
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-              {categories.map((category) => (
-                <CategoryCard key={category.id} category={category} />
-              ))}
-            </div>
+            {categories.length === 0 && isLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+                {[...Array(5)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="bg-white rounded-lg shadow-md h-32 sm:h-40 animate-pulse"
+                  ></div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+                {categories.map((category) => (
+                  <CategoryCard key={category.id} category={category} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -349,7 +357,7 @@ const BestsellersPage: React.FC = () => {
         <section className="py-6 sm:py-10 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <h2 className="text-xl sm:text-3xl font-bold text-gray-800 mb-4 animate-on-scroll">
-              This Week's Top 100,000
+              This Week's Top Bestsellers
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
               {isLoading ? (
@@ -371,6 +379,15 @@ const BestsellersPage: React.FC = () => {
             {totalBooks > BOOKS_PER_PAGE && (
               <div className="mt-4 sm:mt-8 flex justify-center items-center space-x-2 sm:space-x-3 flex-wrap gap-y-2">
                 <button
+                  onClick={() => handlePageChange(1)}
+                  className="p-2 border rounded-full disabled:opacity-50 text-gray-700 hover:bg-gray-100 transition-colors"
+                  disabled={currentPage === 1}
+                >
+                  <span className="sr-only">First Page</span>
+                  <ChevronLeft size={20} className="rotate-180" />
+                  <ChevronLeft size={20} />
+                </button>
+                <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   className="p-2 border rounded-full disabled:opacity-50 text-gray-700 hover:bg-gray-100 transition-colors"
                   disabled={currentPage === 1}
@@ -391,6 +408,15 @@ const BestsellersPage: React.FC = () => {
                   className="p-2 border rounded-full disabled:opacity-50 text-gray-700 hover:bg-gray-100 transition-colors"
                   disabled={currentPage === totalPages}
                 >
+                  <ChevronRight size={20} />
+                </button>
+                <button
+                  onClick={() => handlePageChange(totalPages)}
+                  className="p-2 border rounded-full disabled:opacity-50 text-gray-700 hover:bg-gray-100 transition-colors"
+                  disabled={currentPage === totalPages}
+                >
+                  <span className="sr-only">Last Page</span>
+                  <ChevronRight size={20} />
                   <ChevronRight size={20} />
                 </button>
               </div>

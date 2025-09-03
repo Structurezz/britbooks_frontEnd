@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import Footer from '../components/footer';
 import TopBar from '../components/Topbar';
-import { fetchBooks, Book } from '../data/books';
+import { fetchBooks, fetchCategories, Book } from '../data/books';
 import { useCart } from '../context/cartContext';
 
 // Interface for BookCard props
@@ -40,19 +40,16 @@ const BookCard = ({ id, img, title, author, price }: BookCardProps) => {
 
   return (
     <div className="relative group flex-shrink-0 w-full max-w-[180px] text-center border border-gray-200 rounded-lg p-3 transition-shadow hover:shadow-lg">
-      {/* Book Image with Quick View Overlay */}
       <div className="relative">
         <img src={img} alt={title} className="w-full h-60 object-cover mb-3 rounded" />
-        {/* Quick View Button Overlay (restricted to image area) */}
-        <div className="absolute inset-x-0 top-0 h-60 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+        <div className="absolute inset-x-0 top-0 h-60 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-100 flex items-center justify-center">
           <Link to={`/browse/${id}`}>
-            <button className="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300">
+            <button className="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-100">
               QUICK VIEW
             </button>
           </Link>
         </div>
       </div>
-      {/* Book Details and Add to Basket */}
       <h3 className="font-semibold text-sm truncate">{title}</h3>
       <p className="text-gray-500 text-xs mb-2">{author}</p>
       <div className="flex items-center justify-center text-yellow-400 mb-2">
@@ -69,13 +66,35 @@ const BookCard = ({ id, img, title, author, price }: BookCardProps) => {
   );
 };
 
+// Category Card Component with Explore on Hover
+const CategoryCard = ({ name, imageUrl }: { name: string; imageUrl: string }) => {
+  const id = name.toLowerCase().replace(/\s+/g, '-');
+  return (
+    <Link to={`/category/${id}`} className="flex-shrink-0 w-40 h-40 bg-blue-600 text-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
+      <div className="relative w-full h-full">
+        <img src={imageUrl} alt={name} className="w-full h-full object-cover opacity-70" />
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-100 flex items-center justify-center">
+          <Link to={`/category/${id}`}>
+            <button className="bg-red-500 text-white px-3 py-1 rounded-md text-xs font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-2 transition-all duration-100">
+              EXPLORE
+            </button>
+          </Link>
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+          <span className="text-sm font-semibold">{name}</span>
+        </div>
+      </div>
+    </Link>
+  );
+};
+
 // Updated Book Shelf Component with Grid View for Mobile
 const BookShelf = ({ title, fetchParams }: { title: string; fetchParams: any }) => {
   const [books, setBooks] = useState<BookCardProps[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4; // Adjustable based on design
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const fetchShelfBooks = async () => {
@@ -148,7 +167,8 @@ const BookShelf = ({ title, fetchParams }: { title: string; fetchParams: any }) 
         </div>
       </div>
       <div className="max-h-[480px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+      
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
           {paginatedBooks.map((book, index) => (
             <BookCard key={index} {...book} />
           ))}
@@ -161,10 +181,30 @@ const BookShelf = ({ title, fetchParams }: { title: string; fetchParams: any }) 
   );
 };
 
+
 // --- Main Homepage Component ---
 
 const Homepage = () => {
+  const [categories, setCategories] = useState<{ name: string; imageUrl: string }[]>([]);
+  const categoryRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
+    const fetchCategoriesData = async () => {
+      try {
+        const fetchedCategories = await fetchCategories();
+        // Map categories to include placeholder images (replace with actual images if available)
+        const categoryObjects = fetchedCategories.map((name, index) => ({
+          name,
+          imageUrl: `https://picsum.photos/seed/category-${index}/300/450`,
+        }));
+        setCategories(categoryObjects);
+      } catch (err) {
+        console.error("❌ Failed to fetch categories:", err);
+        setCategories([]); // Fallback to empty if fetch fails
+      }
+    };
+    fetchCategoriesData();
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -184,6 +224,13 @@ const Homepage = () => {
     };
   }, []);
 
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (categoryRef.current) {
+      const scrollAmount = 160; // Adjust based on card width + gap
+      categoryRef.current.scrollLeft += direction === 'right' ? scrollAmount : -scrollAmount;
+    }
+  };
+
   // Fetch parameters for each shelf
   const shelfFetchParams = {
     newArrivals: { sort: "createdAt", order: "desc" },
@@ -193,7 +240,6 @@ const Homepage = () => {
     clearanceItems: { sort: "discount", order: "desc" },
     recentlyViewed: { sort: "lastViewedAt", order: "desc" }, // ideally based on user history
   };
-  
 
   return (
     <>
@@ -223,6 +269,42 @@ const Homepage = () => {
         }
         .scrollbar-thin::-webkit-scrollbar-track {
           background-color: #f3f4f6;
+        }
+
+        .category-section {
+          background: linear-gradient(45deg, #1e40af, #3b82f6);
+          padding: 1rem 0;
+          color: white;
+        }
+
+        .category-section h3 {
+          font-size: 1.25rem;
+          font-weight: bold;
+          margin-bottom: 1rem;
+        }
+
+        .category-card {
+          width: 10rem;
+          height: 10rem;
+          margin: 0 0.5rem;
+          overflow: hidden;
+          position: relative;
+        }
+
+        .category-card img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          opacity: 0.7;
+        }
+
+        .category-card span {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          font-size: 0.875rem;
+          font-weight: 600;
         }
       `}</style>
       <div className="bg-white">
@@ -279,6 +361,43 @@ const Homepage = () => {
               </p>
             </div>
           </div>
+
+          {/* Shop by Category Section */}
+          <section className="category-section animate-on-scroll">
+            <div className="max-w-7xl mx-auto px-4 sm:px-8">
+              <h3 className="text-white">Shop by Category</h3>
+              <div className="relative flex items-center">
+                <button
+                  onClick={() => handleScroll('left')}
+                  className="absolute left-0 z-10 p-2 bg-white bg-opacity-50 rounded-full hover:bg-opacity-75 transition-all disabled:opacity-50"
+                  disabled={!categoryRef.current || categoryRef.current.scrollLeft <= 0}
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <div
+                  ref={categoryRef}
+                  className="flex overflow-x-auto space-x-4 py-4 scrollbar-hide"
+                  style={{ scrollBehavior: 'smooth' }}
+                >
+                  {categories.map((category, index) => (
+                    <CategoryCard key={index} name={category.name} imageUrl={category.imageUrl} />
+                  ))}
+                  <Link to="/categories" className="flex-shrink-0 w-40 h-40 bg-blue-700 text-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      <span className="text-sm font-semibold">Show All Categories</span>
+                    </div>
+                  </Link>
+                </div>
+                <button
+                  onClick={() => handleScroll('right')}
+                  className="absolute right-0 z-10 p-2 bg-white bg-opacity-50 rounded-full hover:bg-opacity-75 transition-all disabled:opacity-50"
+                  disabled={!categoryRef.current || categoryRef.current.scrollLeft >= categoryRef.current.scrollWidth - categoryRef.current.clientWidth}
+                >
+                  <ChevronRight size={24} />
+                </button>
+              </div>
+            </div>
+          </section>
 
           <div className="w-full mx-auto px-4 sm:px-8">
             {/* Book Shelves */}
