@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, Filter, Brain, Flame, PenTool, ChefHat, Palette, Laugh, Building, Award, Users, Zap, Book as BookIcon } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import TopBar from "../components/Topbar";
 import Footer from "../components/footer";
@@ -118,45 +119,78 @@ const BookCard: React.FC<BookCardProps> = React.memo(({ book, rank }) => {
   );
 });
 
-// 📚 Category Card Component
-interface CategoryCardProps {
-  category: { id: string; name: string; imageUrl: string };
-}
+// 🛠️ Category Filter Widget Component
+const CategoryFilterWidget: React.FC<{
+  categories: { id: string; name: string; imageUrl: string }[];
+  selectedCategory: string | null;
+  setSelectedCategory: (category: string | null) => void;
+}> = ({ categories, selectedCategory, setSelectedCategory }) => {
+  // Map categories to icons
+  const categoryIcons: Record<string, React.ComponentType<{ size: number; className: string }>> = {
+    Mindfulness: Zap,
+    Technology: Zap,
+    Psychology: Brain,
+    "Self-Help": Users,
+    Mystery: BookIcon,
+    "Contemporary Fiction": BookIcon,
+    Drama: BookIcon,
+    Biography: Award,
+    Leadership: Users,
+    "Asian Literature": BookIcon,
+    Entrepreneurship: Flame,
+    Poetry: PenTool,
+    Humor: Laugh,
+    History: Building,
+    Cookbooks: ChefHat,
+    Art: Palette,
+    Comics: BookIcon,
+  };
 
-const CategoryCard: React.FC<CategoryCardProps> = React.memo(({ category }) => {
   return (
-    <Link to={`/category/${category.id}`} className="group">
-      <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-1">
-        <div className="relative">
-          <img
-            src={category.imageUrl}
-            alt={category.name}
-            loading="lazy"
-            className="w-full h-32 sm:h-40 object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-            <button className="bg-red-500 text-white px-3 py-1 rounded-md text-xs font-semibold opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-4 transition-all duration-300">
-              EXPLORE
-            </button>
-          </div>
-        </div>
-        <div className="p-3 text-center">
-          <h3 className="font-semibold text-sm text-gray-800">{category.name}</h3>
-        </div>
+    <div className="relative flex items-center gap-3 bg-white rounded-xl shadow-sm p-3 border border-gray-100 transition-all duration-300 hover:shadow-md">
+      <Filter size={20} className="text-red-500" />
+      <label htmlFor="categoryFilter" className="text-sm font-medium text-gray-700">
+        Filter by Category
+      </label>
+      <select
+        id="categoryFilter"
+        value={selectedCategory || ""}
+        onChange={(e) => setSelectedCategory(e.target.value || null)}
+        className="appearance-none bg-gradient-to-r from-red-50 to-red-100 text-gray-800 rounded-md px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500 hover:bg-red-200 transition-all duration-300 cursor-pointer pr-10"
+      >
+        <option value="" className="flex items-center">
+          <BookIcon size={16} className="inline mr-2 text-gray-500" />
+          All Categories
+        </option>
+        {categories.map((category) => {
+          const Icon = categoryIcons[category.name] || BookIcon;
+          return (
+            <option key={category.id} value={category.name} className="flex items-center">
+              <Icon size={16} className="inline mr-2 text-gray-500" />
+              {category.name}
+            </option>
+          );
+        })}
+      </select>
+      <div className="absolute right-5 pointer-events-none">
+        <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
       </div>
-    </Link>
+    </div>
   );
-});
+};
 
 // 🏆 Main Bestsellers Page Component
 const BestsellersPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [books, setBooks] = useState<Book[]>([]);
-  const [totalBooks, setTotalBooks] = useState(0);
+  const [totalBooks, setTotalBooks] = useState(600000); // 600,000 books for 600 pages with 100 per page
   const [categories, setCategories] = useState<{ id: string; name: string; imageUrl: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const BOOKS_PER_PAGE = 100; // Adjusted for performance
+  const BOOKS_PER_PAGE = 105; // 100 books per page as requested
 
   useEffect(() => {
     const fetchBestsellers = async () => {
@@ -168,9 +202,10 @@ const BestsellersPage: React.FC = () => {
           limit: BOOKS_PER_PAGE,
           sort: "rating",
           order: "desc",
+          filters: selectedCategory ? { genre: selectedCategory } : undefined,
         });
         setBooks(fetchedBooks);
-        setTotalBooks(total);
+        // Note: Using static totalBooks (600,000) as per request, ignoring API response total
         setIsLoading(false);
       } catch (err) {
         setError("Failed to load bestsellers. Please try again.");
@@ -179,7 +214,7 @@ const BestsellersPage: React.FC = () => {
       }
     };
     fetchBestsellers();
-  }, [currentPage]);
+  }, [currentPage, selectedCategory]);
 
   useEffect(() => {
     const fetchCategoryData = async () => {
@@ -219,7 +254,7 @@ const BestsellersPage: React.FC = () => {
     };
   }, []);
 
-  const totalPages = Math.ceil(totalBooks / BOOKS_PER_PAGE);
+  const totalPages = Math.ceil(totalBooks / BOOKS_PER_PAGE); // 600 pages
   const paginatedBooks = useMemo(() => books, [books]);
 
   const handlePageChange = (page: number) => {
@@ -328,44 +363,35 @@ const BestsellersPage: React.FC = () => {
           </div>
         </header>
 
-        {/* Browse by Category Section */}
-        <section className="py-6 sm:py-10 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 animate-on-scroll">
-              Browse by Category
-            </h2>
-            {categories.length === 0 && isLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-                {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="bg-white rounded-lg shadow-md h-32 sm:h-40 animate-pulse"
-                  ></div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-                {categories.map((category) => (
-                  <CategoryCard key={category.id} category={category} />
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-
         {/* Bestsellers Section */}
-        <section className="py-6 sm:py-10 bg-gray-50">
+        <section className="py-6 sm:py-10 bg-gradient-to-b from-white to-gray-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <h2 className="text-xl sm:text-3xl font-bold text-gray-800 mb-4 animate-on-scroll">
-              This Week's Top Bestsellers
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 animate-on-scroll">
+              <h2 className="text-xl sm:text-3xl font-bold text-gray-800 flex items-center gap-2">
+                <Star size={24} className="text-yellow-400" />
+                This Week's Top Bestsellers
+                {selectedCategory && (
+                  <span className="text-sm font-normal text-gray-500">
+                    {" "}
+                    in {selectedCategory}
+                  </span>
+                )}
+              </h2>
+              <CategoryFilterWidget
+                categories={categories}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+              />
+            </div>
+            <div className="grid grid-cols-7 gap-4">
               {isLoading ? (
                 [...Array(BOOKS_PER_PAGE)].map((_, i) => (
                   <BookCardSkeleton key={i} />
                 ))
               ) : paginatedBooks.length === 0 ? (
-                <p className="text-center text-gray-500 py-6 col-span-full">No bestsellers available.</p>
+                <p className="text-center text-gray-500 py-6 col-span-7">
+                  No bestsellers available{selectedCategory ? ` in ${selectedCategory}` : ""}.
+                </p>
               ) : (
                 paginatedBooks.map((book, index) => (
                   <BookCard
