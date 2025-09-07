@@ -269,7 +269,7 @@ const TopBar = () => {
                 onChange={handleInputChange}
               />
               <button className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                <SearchIcon className="h-5 w-5"/>
+                <SearchIcon className="h-5 w-5 -mt-6"/>
               </button>
             </div>
             {/* Search Results Dropdown */}
@@ -357,7 +357,7 @@ const TopBar = () => {
                 onChange={handleInputChange}
               />
               <button className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                <SearchIcon className="h-5 w-5" />
+              <SearchIcon className="h-5 w-5 -mt-2" />
               </button>
             </div>
             {/* Search Results Dropdown */}

@@ -275,7 +275,7 @@ const PopularBooksPage: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [totalBooks, setTotalBooks] = useState(600000);
   const [categories, setCategories] = useState<{ id: string; name: string; imageUrl: string }[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); 
   const [error, setError] = useState<string | null>(null);
   const [isLiveUpdating, setIsLiveUpdating] = useState(false);
 
@@ -462,7 +462,7 @@ const PopularBooksPage: React.FC = () => {
         <div className="max-w-7xl mx-auto p-4 sm:p-8">
           <div className="bg-white p-4 rounded-lg shadow-sm mb-8 flex flex-col md:flex-row items-center gap-4 relative">
             <div className="relative w-full md:w-1/3">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 -mt-2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search popular books by title or author..."
