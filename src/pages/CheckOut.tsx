@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Check, X, CreditCard, Lock } from "lucide-react";
-import { MD5 } from "crypto-js"; // For generating unique seeds
+import { MD5 } from "crypto-js";
 import TopBar from "../components/Topbar";
 import Footer from "../components/footer";
 import { useCart } from "../context/cartContext";
@@ -10,6 +11,7 @@ import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { Addresses, AddressFormModal } from "./Addresses";
 
 // Initialize Stripe with Vite environment variable
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -18,11 +20,8 @@ const API_BASE_URL = "https://britbooks-api-production.up.railway.app/api";
 
 // --- Helper Function for Placeholder Images ---
 const generatePlaceholderImage = (book: { title: string; isbn: string; genre: string }): string => {
-  // Create a hash from ISBN or title to use as a seed for Picsum
   const input = book.isbn || book.title;
-  const hash = MD5(input).toString().slice(0, 8); // Use first 8 chars of MD5 hash
-
-  // Map genre to a keyword for visual distinction
+  const hash = MD5(input).toString().slice(0, 8);
   const genreColors: Record<string, string> = {
     Mindfulness: "zen",
     Technology: "tech",
@@ -43,10 +42,7 @@ const generatePlaceholderImage = (book: { title: string; isbn: string; genre: st
     Comics: "comics",
     default: "default",
   };
-
   const genreKey = genreColors[book.genre] || genreColors.default;
-
-  // Use Lorem Picsum with the hash as a seed for unique images
   return `https://picsum.photos/seed/${hash}-${genreKey}/300/450`;
 };
 
@@ -244,10 +240,14 @@ const PaymentForm = ({
 }) => {
   const stripe = useStripe();
   const elements = useElements();
-  const { auth } = useAuth();
+  const { auth, logout } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"credit-card" | "paypal">("credit-card");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [useSavedAddress, setUseSavedAddress] = useState(true);
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [shippingAddress, setShippingAddress] = useState({
     name: "",
     line1: "",
@@ -256,6 +256,63 @@ const PaymentForm = ({
     postalCode: "",
     country: "GB",
   });
+
+  const userId = auth.token ? jwtDecode<{ userId: string }>(auth.token).userId : null;
+
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      if (!auth.token || !userId) {
+        setError("Please log in to view addresses.");
+        navigate("/login");
+        return;
+      }
+      try {
+        const response = await axios.get(`${API_BASE_URL}/users/${userId}/address`, {
+          headers: { Authorization: `Bearer ${auth.token}` },
+        });
+        setAddresses(response.data.addresses || []);
+        const defaultAddress = response.data.addresses.find((addr) => addr.isDefault);
+        if (defaultAddress) {
+          setSelectedAddressId(defaultAddress._id);
+          setShippingAddress({
+            name: defaultAddress.fullName,
+            line1: defaultAddress.addressLine2
+              ? `${defaultAddress.addressLine1}, ${defaultAddress.addressLine2}`
+              : defaultAddress.addressLine1,
+            city: defaultAddress.city,
+            phoneNumber: defaultAddress.phoneNumber,
+            postalCode: defaultAddress.postalCode,
+            country: defaultAddress.country,
+          });
+        }
+        setError(null);
+      } catch (err: any) {
+        console.error("Fetch addresses error:", err);
+        if (err.response?.status === 401) {
+          setError("Session expired. Please log in again.");
+          logout();
+          navigate("/login");
+        } else {
+          setError("Failed to load addresses. Please try again.");
+        }
+      }
+    };
+    if (useSavedAddress) {
+      fetchAddresses();
+    }
+  }, [auth.token, userId, navigate, logout, useSavedAddress]);
+
+  const handleSelectAddress = (address) => {
+    setSelectedAddressId(address._id);
+    setShippingAddress({
+      name: address.fullName,
+      line1: address.addressLine2 ? `${address.addressLine1}, ${address.addressLine2}` : address.addressLine1,
+      city: address.city,
+      phoneNumber: address.phoneNumber,
+      postalCode: address.postalCode,
+      country: address.country,
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -316,46 +373,77 @@ const PaymentForm = ({
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">Shipping Address</h3>
-              <input
-                type="text"
-                placeholder="Full Name"
-                value={shippingAddress.name}
-                onChange={(e) => setShippingAddress({ ...shippingAddress, name: e.target.value })}
-                className="w-full mt-1 p-2 sm:p-3 border border-gray-300 rounded-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Address Line 1"
-                value={shippingAddress.line1}
-                onChange={(e) => setShippingAddress({ ...shippingAddress, line1: e.target.value })}
-                className="w-full mt-2 p-2 sm:p-3 border border-gray-300 rounded-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500"
-                required
-              />
-              <input
-                type="text"
-                placeholder="City"
-                value={shippingAddress.city}
-                onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                className="w-full mt-2 p-2 sm:p-3 border border-gray-300 rounded-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500"
-                required
-              />
-              <input
-                type="tel"
-                placeholder="Phone Number"
-                value={shippingAddress.phoneNumber}
-                onChange={(e) => setShippingAddress({ ...shippingAddress, phoneNumber: e.target.value })}
-                className="w-full mt-2 p-2 sm:p-3 border border-gray-300 rounded-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Postal Code"
-                value={shippingAddress.postalCode}
-                onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
-                className="w-full mt-2 p-2 sm:p-3 border border-gray-300 rounded-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500"
-                required
-              />
+              <div className="flex items-center mb-4">
+                <input
+                  type="checkbox"
+                  checked={useSavedAddress}
+                  onChange={() => setUseSavedAddress(!useSavedAddress)}
+                  className="form-checkbox text-red-600"
+                />
+                <span className="ml-2 text-sm sm:text-base text-gray-600">Use saved address</span>
+              </div>
+              {useSavedAddress ? (
+                <Addresses
+                  addresses={addresses}
+                  setAddresses={setAddresses}
+                  authToken={auth.token}
+                  userId={userId}
+                  navigate={navigate}
+                  onSelectAddress={handleSelectAddress}
+                  selectedAddressId={selectedAddressId}
+                />
+              ) : (
+                <div className="space-y-3 sm:space-y-4">
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    value={shippingAddress.name}
+                    onChange={(e) => setShippingAddress({ ...shippingAddress, name: e.target.value })}
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500"
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Address Line 1"
+                    value={shippingAddress.line1}
+                    onChange={(e) => setShippingAddress({ ...shippingAddress, line1: e.target.value })}
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500"
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="City"
+                    value={shippingAddress.city}
+                    onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500"
+                    required
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Phone Number"
+                    value={shippingAddress.phoneNumber}
+                    onChange={(e) => setShippingAddress({ ...shippingAddress, phoneNumber: e.target.value })}
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500"
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Postal Code"
+                    value={shippingAddress.postalCode}
+                    onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500"
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Country"
+                    value={shippingAddress.country}
+                    onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500"
+                    required
+                  />
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Card Details</label>
@@ -380,7 +468,7 @@ const PaymentForm = ({
             <button
               type="submit"
               className="w-full mt-4 sm:mt-6 bg-red-600 text-white py-2 sm:py-3 rounded-md font-semibold text-sm sm:text-base hover:bg-red-700 transition-colors"
-              disabled={loading || !stripe}
+              disabled={loading || !stripe || !shippingAddress.name}
             >
               {loading ? "Processing..." : "CONTINUE TO REVIEW"}
             </button>

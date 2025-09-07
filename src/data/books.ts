@@ -25,13 +25,11 @@ interface FetchBooksParams {
   filters?: Record<string, any>;
 }
 
-// Function to generate a unique placeholder image URL using Lorem Picsum
+// ----------------- PLACEHOLDER IMAGE -----------------
 const generatePlaceholderImage = (book: { title: string; isbn: string; genre: string }): string => {
-  // Create a hash from ISBN or title to use as a seed for Picsum
   const input = book.isbn || book.title;
-  const hash = MD5(input).toString().slice(0, 8); // Use first 8 chars of MD5 hash
+  const hash = MD5(input).toString().slice(0, 8);
 
-  // Map genre to a keyword (optional, for future customization if needed)
   const genreColors: Record<string, string> = {
     Mindfulness: "zen",
     Technology: "tech",
@@ -54,12 +52,17 @@ const generatePlaceholderImage = (book: { title: string; isbn: string; genre: st
   };
 
   const genreKey = genreColors[book.genre] || genreColors.default;
-
-  // Use Lorem Picsum with the hash as a seed for unique images
   return `https://picsum.photos/seed/${hash}-${genreKey}/300/450`;
 };
 
-export const fetchBooks = async ({ page, limit, sort, order, filters }: FetchBooksParams): Promise<{ books: Book[]; total: number }> => {
+// ----------------- FETCH BOOKS -----------------
+export const fetchBooks = async ({
+  page,
+  limit,
+  sort,
+  order,
+  filters,
+}: FetchBooksParams): Promise<{ books: Book[]; total: number }> => {
   try {
     const params: Record<string, any> = {
       page,
@@ -76,20 +79,23 @@ export const fetchBooks = async ({ page, limit, sort, order, filters }: FetchBoo
       if (filters.rating != null) params.rating = filters.rating;
     }
 
-    const response = await axios.get("https://britbooks-api-production.up.railway.app/api/market/admin/listings", {
-      params,
-    });
+    const response = await axios.get(
+      "https://britbooks-api-production.up.railway.app/api/market/admin/listings",
+      { params }
+    );
 
     const books: Book[] = response.data.listings.map((listing: any) => ({
       id: listing._id,
       title: listing.title,
       author: listing.author,
       price: listing.price,
-      imageUrl: listing.samplePageUrls?.[0] || generatePlaceholderImage({
-        title: listing.title,
-        isbn: listing.isbn,
-        genre: listing.category,
-      }),
+      imageUrl:
+        listing.samplePageUrls?.[0] ||
+        generatePlaceholderImage({
+          title: listing.title,
+          isbn: listing.isbn,
+          genre: listing.category,
+        }),
       genre: listing.category,
       condition: listing.condition,
       description: listing.description || "",
@@ -110,37 +116,60 @@ export const fetchBooks = async ({ page, limit, sort, order, filters }: FetchBoo
   }
 };
 
-export const fetchCategories = async (): Promise<string[]> => {
+// ----------------- CATEGORY CACHE -----------------
+let cachedCategories: string[] | null = null;
+
+// Default fallback
+const defaultCategories = [
+  "Mindfulness",
+  "Technology",
+  "Psychology",
+  "Self-Help",
+  "Mystery",
+  "Contemporary Fiction",
+  "Drama",
+  "Biography",
+  "Leadership",
+  "Asian Literature",
+  "Entrepreneurship",
+  "Poetry",
+  "Humor",
+  "History",
+  "Cookbooks",
+  "Art",
+  "Comics",
+].sort();
+
+// ----------------- FETCH CATEGORIES -----------------
+export const fetchCategories = async (forceRefresh = false): Promise<string[]> => {
+  // 1️⃣ Return cached immediately if available and not forcing refresh
+  if (cachedCategories && !forceRefresh) {
+    // Trigger background refresh but don’t block UI
+    refreshCategories();
+    return cachedCategories;
+  }
+
+  // 2️⃣ Otherwise fetch fresh
+  return await refreshCategories();
+};
+
+// Helper to refresh cache
+const refreshCategories = async (): Promise<string[]> => {
   try {
-    const response = await axios.get("https://britbooks-api-production.up.railway.app/api/market/admin/listings", {
-      params: { page: 1, limit: 30000 },
-    });
+    const response = await axios.get(
+      "https://britbooks-api-production.up.railway.app/api/market/admin/listings",
+      { params: { page: 1, limit: 30000 } }
+    );
 
     const categories = Array.from(
       new Set(response.data.listings.map((listing: any) => listing.category).filter((cat: string) => cat))
     ).sort();
 
-    return categories;
+    cachedCategories = categories.length > 0 ? categories : defaultCategories;
+    return cachedCategories;
   } catch (error) {
     console.error("❌ Error fetching categories:", error instanceof Error ? error.message : error);
-    return [
-      "Mindfulness",
-      "Technology",
-      "Psychology",
-      "Self-Help",
-      "Mystery",
-      "Contemporary Fiction",
-      "Drama",
-      "Biography",
-      "Leadership",
-      "Asian Literature",
-      "Entrepreneurship",
-      "Poetry",
-      "Humor",
-      "History",
-      "Cookbooks",
-      "Art",
-      "Comics",
-    ].sort();
+    cachedCategories = cachedCategories || defaultCategories; // fallback to last known or defaults
+    return cachedCategories;
   }
 };
